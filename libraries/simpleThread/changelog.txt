@@ -1,0 +1,2 @@
+2013_11_18 - 17:49
+- Bug-Fix: the waittime for threads is now working correctly
