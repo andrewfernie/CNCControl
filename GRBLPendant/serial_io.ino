@@ -18,15 +18,19 @@ void serial_io_grbl()
 	{
 		char c = grblSerial.read();
 
-		gsSerial.print(c);
+//		gsSerial.print(c);
 
 		gr_chars++;
 
 		// wait for a complete line 
 		// and parse it
 		if (c == '\n') {
+
 			parseGrblLine(grserial);
 
+			gsSerial.print(grserial);     // send line from the grbl controller to the g-code sender
+			gsSerial.print(c);
+			
 			gr = 0;
 			memset(&grserial[0], 0, sizeof(grserial));
 			grserial[0] = '\0';
@@ -88,13 +92,17 @@ void parsePCCommand(char* line)
 	char* c2 = strrchr(line, '\r');
 	*c2 = ' ';
 
-	// All commands with an ':' at start can control XLCD 
+	// All commands with an ':' at start can control GRBLPendant
 	if (line[0] == ':')  parse_command_line(line);
 }
 
 // Analyze every line and choose an action
-void parseGrblLine(char* line)
+void parseGrblLine(char* line_in)
 {
+	char line[BUFFER_SIZE];
+
+	strcpy(line, line_in);  
+
 	char* c2 = strrchr(line, '\r');
 	*c2 = ' ';
 	//	Serial.println(line);
@@ -111,7 +119,7 @@ void parseGrblLine(char* line)
 }
 
 
-void parse_status_line(char* line)
+void parse_status_line(char* line_in)
 {
 	// Typical status lines formats
 	//
@@ -123,22 +131,25 @@ void parse_status_line(char* line)
 	char* temp;
 	float tmpFloat;
 	int   n;
+	char line[BUFFER_SIZE];
 
 	lastStatusRXTime = millis();
 
+	strcpy(line, line_in);	// work with local copy as strtok modifies the source
+
 	// First Line
 	// State ..
-	temp = split(line, delim, 0);
+	temp = strtok(line, delim);
 	set_grblState_from_chars(temp);
 
 
 	// Coordinates ..
-	temp = split(line, delim, 1);
+	temp = strtok(NULL, delim);
 	strncpy(positionCoordSystem, temp, sizeof(positionCoordSystem) - 1);
 
 
 	// X Machine position ...
-	temp = split(line, delim, 2);
+	temp = strtok(NULL, delim);
 	n = sscanf(temp, "%f", &tmpFloat);
 
 	if (n == 1)
@@ -147,7 +158,7 @@ void parse_status_line(char* line)
 	}
 
 	// Y Machine position ...
-	temp = split(line, delim, 3);
+	temp = strtok(NULL, delim);
 	n = sscanf(temp, "%f", &tmpFloat);
 
 	if (n == 1)
@@ -156,12 +167,80 @@ void parse_status_line(char* line)
 	}
 
 	// Z Machine position ...
-	temp = split(line, delim, 4);
+	temp = strtok(NULL, delim);
 	n = sscanf(temp, "%f", &tmpFloat);
 
 	if (n == 1)
 	{
 		currentPosition.z = tmpFloat;
+	}
+
+	temp = strtok(NULL, delim);
+	while (temp != NULL)
+	{
+		if (strcmp(temp, "F") == 0)
+		{
+			if (sscanf(temp, "%f", &tmpFloat) == 1)
+			{
+				currentFeedRate = tmpFloat;
+			}
+
+		}
+		else if (strcmp(temp, "FS") == 0)
+		{
+			temp = strtok(NULL, delim);
+			if (sscanf(temp, "%f", &tmpFloat) == 1)
+			{
+				currentFeedRate = tmpFloat;
+			}
+
+			temp = strtok(NULL, delim);
+			if (sscanf(temp, "%f", &tmpFloat) == 1)
+			{
+				currentSpindleSpeed = tmpFloat;
+			}
+		}
+		else if (strcmp(temp, "WCO") == 0)
+		{
+			temp = strtok(NULL, delim);
+			if (sscanf(temp, "%f", &tmpFloat) == 1)
+			{
+				currentWCO.x = tmpFloat;
+			}
+
+			temp = strtok(NULL, delim);
+			if (sscanf(temp, "%f", &tmpFloat) == 1)
+			{
+				currentWCO.y = tmpFloat;
+			}
+
+			temp = strtok(NULL, delim);
+			if (sscanf(temp, "%f", &tmpFloat) == 1)
+			{
+				currentWCO.z = tmpFloat;
+			}
+		}
+		else if (strcmp(temp, "Ov") == 0)
+		{
+			temp = strtok(NULL, delim);
+			if (sscanf(temp, "%f", &tmpFloat) == 1)
+			{
+				currentOvFeedRatePercent = tmpFloat;
+			}
+
+			temp = strtok(NULL, delim);
+			if (sscanf(temp, "%f", &tmpFloat) == 1)
+			{
+				currentOvRapidRatePercent = tmpFloat;
+			}
+
+			temp = strtok(NULL, delim);
+			if (sscanf(temp, "%f", &tmpFloat) == 1)
+			{
+				currentOvSpindleSpeedPercent = tmpFloat;
+			}
+		}
+		temp = strtok(NULL, delim);
 	}
 
 	lastCall = millis();
@@ -306,7 +385,12 @@ void parse_state_line(char* stateLine)
 		}
 		else if (thisToken[0] == 'F')
 		{
-			strcpy(currentFeedRate, &(thisToken[1]));
+			float tmpFloat;
+
+			if (sscanf(thisToken, "%f", &tmpFloat) == 1)
+			{
+				currentFeedRate = tmpFloat;
+			}
 		}
 
 		// next one

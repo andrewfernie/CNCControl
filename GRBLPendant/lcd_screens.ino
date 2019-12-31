@@ -143,7 +143,7 @@ void display_state()
 
 
 	// Feed
-	sprintf(tmpStr, "%4.4s", currentFeedRate);
+	sprintf(tmpStr, "%4.0f", currentFeedRate);
 	myLCD.setCursor((LCD_cols - strlen(tmpStr) - 4), 2);
 	myLCD.print(strcat(tmpStr, "mm/s"));
 	

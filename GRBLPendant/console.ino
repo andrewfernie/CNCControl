@@ -15,7 +15,7 @@ void parse_command_line(char* line)
 	if (line[1] == '?')
 	{
 		// Display Menu from this device
-		Serial.print(F("<XLCD "));
+		Serial.print(F("<GRBL Pendant "));
 		Serial.print(VERSION);
 		Serial.println(F(" MENU>"));
 

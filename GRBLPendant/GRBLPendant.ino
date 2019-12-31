@@ -22,7 +22,6 @@
 #include <simpleThread.h>
 #include <Encoder.h>
 
-
 //
 // ===============================================
 // Defines
@@ -145,7 +144,6 @@ LiquidCrystal myLCD(LCD_EN, LCD_RW, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
 // Set the pins on the I2C chip used for LCD connections:
 //                         addr, en,rw,rs,d4,d5,d6,d7,bl,blpol
 LiquidCrystal_I2C myLCD(LCD_ADDR, LCD_EN, LCD_RW, LCD_RS, LCD_D4, LCD_D5, LCD_D6, LCD_D7, 3, POSITIVE);  // Set the LCD I2C address
-//LiquidCrystal_I2C myLCD(LCD_ADDR);  // Set the LCD I2C address
 #endif
 
 // -------------
@@ -262,7 +260,11 @@ CoolantState currentCoolantState = CoolantState::Undefined;
 char currentTool[] = "   ";
 
 // Feed rate
-char currentFeedRate[] = "          ";
+float currentFeedRate;
+
+float currentOvFeedRatePercent;  //Override Percent
+float currentOvRapidRatePercent;  //Override Percent
+
 
 struct AxisData
 { 
@@ -274,6 +276,9 @@ AxisData currentPosition;
 char     positionCoordSystem[10];
 
 float currentSpindleSpeed;
+float currentOvSpindleSpeedPercent; //Override Percent
+
+AxisData currentWCO;
 
 // --------------
 // Jog parameters
@@ -321,14 +326,14 @@ void setup()
 	Serial.print(F("<GRBLPendant "));
 	Serial.print(VERSION);
 	Serial.println(F(">"));
-	Serial.println(F("<All commands for XLCD start with a colon ':'>"));
+	Serial.println(F("<All commands start with a colon ':'>"));
 	Serial.println(F("<Call help with ':?'>"));
 
 	// Old LCD Screens
 	myLCD.begin(LCD_cols, LCD_rows); // letter, row
 
 	myLCD.setCursor(0, 0); // letter, row
-	myLCD.print(F("XLCD "));
+	myLCD.print(F("GRBL Pendant "));
 	myLCD.print(VERSION);
 	myLCD.setCursor(0, 1); // letter, row
 	myLCD.print(F("Connect ... "));
