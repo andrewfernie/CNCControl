@@ -36,28 +36,36 @@ void display_state()
 		strcpy(tmpStr, "Idle ");
 		break;
 
-	case GRBLStates::Queue:
-		strcpy(tmpStr, "Queue");
-		break;
-
 	case GRBLStates::Run:
 		strcpy(tmpStr, "Run  ");
 		break;
 
 	case GRBLStates::Hold:
-		strcpy(tmpStr, "Hold ");
+		strcpy(tmpStr, "Hold "); 
+		break;
+
+	case GRBLStates::Jog:
+		strcpy(tmpStr, "Jog");
+		break;
+
+	case GRBLStates::Alarm:
+		strcpy(tmpStr, "Alarm");
+		break;
+
+	case GRBLStates::Door:
+		strcpy(tmpStr, "Door");
+		break;
+
+	case GRBLStates::Check:
+		strcpy(tmpStr, "Check");
 		break;
 
 	case GRBLStates::Home:
 		strcpy(tmpStr, "Home ");
 		break;
 
-	case GRBLStates::Alarm:
-		strcpy(tmpStr, "Alarm");
-		break;
-		
-	case GRBLStates::Check:
-		strcpy(tmpStr, "Check");
+	case GRBLStates::Sleep:
+		strcpy(tmpStr, "Sleep");
 		break;
 
 	default:

@@ -31,7 +31,7 @@ void ProcessKey(char key)
 
 	case '4':
 		// Unlock
-		grblSerial.print("$X\n");		
+		sendGRBLCommand("$X\n");
 		break;
 
 	case '5':
@@ -51,7 +51,7 @@ void ProcessKey(char key)
 
 	case '8':
 		// Home
-		grblSerial.print("$H\n");
+		sendGRBLCommand("$H\n");
 		break;
 
 	case '9':
@@ -66,7 +66,15 @@ void ProcessKey(char key)
 		break;
 
 	case 'B':
-		pendantMode = PendantModes::Control;
+		if (pendantMode == PendantModes::Control)
+		{
+			pendantMode = PendantModes::Monitor;
+		}
+		else
+		{
+			pendantMode = PendantModes::Control;
+		}
+
 		break;
 
 	case 'C':
@@ -77,7 +85,7 @@ void ProcessKey(char key)
 		// Jog -
 		if (pendantMode == PendantModes::Control)
 		{
-			send_jog_command(-1.0);
+			send_jog_command(-1.0 * get_jog_step());
 		}
 		break;
 
@@ -85,12 +93,11 @@ void ProcessKey(char key)
 		// Jog +
 		if (pendantMode == PendantModes::Control)
 		{
-			send_jog_command(+1.0);
+			send_jog_command(+1.0 * get_jog_step());
 		}
 		break;
 
 	case 'F':
-		pendantMode = PendantModes::Monitor;
 		break;
 
 		//default:

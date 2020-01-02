@@ -49,7 +49,7 @@ boolean simpleThread_loop(getPositions)
 	}
 
 	// output counter value
-	grblSerial.print('?');
+	sendGRBLCommand("?");
 
 #if defined(DEBUG)
 	Serial.print(F("<Free "));
@@ -74,7 +74,7 @@ void simpleThread_setup(getStates)
 boolean simpleThread_loop(getStates)
 {
 	// output counter value
-	grblSerial.print("$G\n");
+	sendGRBLCommand("$G\n");
 
 	return false;
 }

@@ -24,13 +24,23 @@ long ReadEncoder()
 }
 
 //--------------------------------------------------------------------------------------
+// ResetEncoderCount()
+//--------------------------------------------------------------------------------------
+void ResetEncoderCount()
+{
+#ifdef ENC_A
+	encoder.write(0);
+#endif
+}
+
+//--------------------------------------------------------------------------------------
 // ReadEncoderSwitch()
 //--------------------------------------------------------------------------------------
 bool ReadEncoderSwitch()
 {
 #ifdef ENC_S
 	// Rotary Encoder Select
-	return digitalRead(ENC_S);
+	return !digitalRead(ENC_S);
 #endif
 }
 

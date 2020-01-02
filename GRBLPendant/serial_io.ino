@@ -18,19 +18,13 @@ void serial_io_grbl()
 	{
 		char c = grblSerial.read();
 
-//		gsSerial.print(c);
-
-		gr_chars++;
-
 		// wait for a complete line 
 		// and parse it
 		if (c == '\n') {
 
+			DEBUG_PRINTLN(grserial);
 			parseGrblLine(grserial);
 
-			gsSerial.print(grserial);     // send line from the grbl controller to the g-code sender
-			gsSerial.print(c);
-			
 			gr = 0;
 			memset(&grserial[0], 0, sizeof(grserial));
 			grserial[0] = '\0';
@@ -39,14 +33,6 @@ void serial_io_grbl()
 			if (gr < BUFFER_SIZE)
 				grserial[gr++] = c;
 		}
-
-		//// dont send data from $G to Serial, 
-		//// cuz UGS don't understand this
-		//// dont send data if string empty
-		//if(grserial[0] != '['){
-		//   Serial.print(c);
-		//}
-
 	}
 }
 
@@ -57,43 +43,77 @@ void serial_io_gs()
 	{
 		char c = gsSerial.read();
 
-		grblSerial.print(c);
 
-		pc_chars++;
+		if (c == 0x18)
+		{
+			// If a ctrl-x is received from UGS, just send it on. 
+			grblSerial.write(c);
+
+			// flush the buffer
+			pc = 0;
+			memset(&pcserial[0], 0, sizeof(pcserial));
+			pcserial[0] = '\0';
+		}
+		else if (c == '?')
+		{
+			// If a ctrl-x is received from UGS, just send it on. 
+			grblSerial.write(c);
+		}
+		else if (c == '\n') 
+		{
+			// wait for a complete line
+			// and parse it
+			parsePCCommand(pcserial);
+		
+			pc = 0;
+			memset(&pcserial[0], 0, sizeof(pcserial));
+			pcserial[0] = '\0';
+		}
+		else 
+		{
+			if (pc < BUFFER_SIZE) {
+				pcserial[pc++] = c;
+			}
+		}
 
 
-		//   // wait for a complete line
-		//   // and parse it
-		//   if(c == '\n'){
-		//      parsePCCommand(pcserial);
-		//      pc = 0;
-		//      memset(&pcserial[0], 0, sizeof(pcserial));
-		//      pcserial[0] = '\0';
-		//   } else {
-		//      // if to big ...
-		//      if(pc < BUFFER_SIZE){
-		//      	pcserial[pc++] = c;
-		//      }
-
-		//   }
-
-		//   // dont send serial commands (:char) to grbl
-		//   if(pcserial[0] != ':'){
-		   //    grblSerial.print(c);
-		//   }
 
 	}
 }
 
+void sendGRBLCommand_NoCount(char* command)
+{
+	grblSerial.print(command);
+}
+void sendGRBLCommand(char* command)
+{
+	sendGRBLCommand_NoCount(command);
+	grbl_command_count++;
+}
+void sendGRBLCommand_NoCount(const char command[])
+{
+	grblSerial.print(command);
+}
+void sendGRBLCommand(const char command[])
+{
+	sendGRBLCommand_NoCount(command);
+	grbl_command_count++;
+}
 
 // Analyze every command (from PC => Xlcd) and choose an action
 void parsePCCommand(char* line)
 {
-	char* c2 = strrchr(line, '\r');
-	*c2 = ' ';
-
 	// All commands with an ':' at start can control GRBLPendant
-	if (line[0] == ':')  parse_command_line(line);
+	// dont send them to grbl
+	if (line[0] == ':')
+	{
+		parse_command_line(line);
+	}
+	else 
+	{
+		sendGRBLCommand(line);
+		sendGRBLCommand("\n");
+	}
 }
 
 // Analyze every line and choose an action
@@ -101,24 +121,72 @@ void parseGrblLine(char* line_in)
 {
 	char line[BUFFER_SIZE];
 
-	strcpy(line, line_in);  
+	strcpy(line, line_in);
 
 	char* c2 = strrchr(line, '\r');
-	*c2 = ' ';
-	//	Serial.println(line);
+	*c2 = '\0';
 
 	if (line[0] == '<')
 	{
 		parse_status_line(line);
+		gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
+		gsSerial.print("\n");
 	}
 	else if (line[0] == '[')
 	{
 		parse_state_line(line);
+
+		if (pendantMode != PendantModes::Control)
+		{
+			gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
+			gsSerial.print("\n");
+		}
 	}
+	else if (strncmp(line, "ok", 2) == 0)
+	{
+		if (pendantMode == PendantModes::Control)
+		{
+			grbl_command_count--;
+		}
+		else
+		{
+			gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
+			gsSerial.print("\n");
+		}
+	}
+	else if (strncmp(line, "error", 5) == 0)
+	{
+		if (pendantMode != PendantModes::Control)
+		{
+			gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
+			gsSerial.print("\n");
+		}
+	}
+	else if (strncmp(line, "ALARM", 5) == 0)
+	{
+		if (pendantMode != PendantModes::Control)
+		{
+			gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
+			gsSerial.print("\n");
+		}
+	}
+	else
+	{
+		gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
+		gsSerial.print("\n");
+	}
+
 
 }
 
 
+//// If the pendant is in monitor mode send everything on to the sender.
+//// If not, dont send data from $G or empty strings as UGS objects.
+//if ((pendantMode == PendantModes::Monitor) || ((grserial[0] != '[') && (grserial[0] != 0)))
+//{
+//	gsSerial.print(grserial);     // send line from the grbl controller to the g-code sender
+//	gsSerial.print(c);
+//}
 void parse_status_line(char* line_in)
 {
 	// Typical status lines formats
@@ -417,15 +485,16 @@ void send_jog_command(float displacement)
 		strcat(commandStr, "Z");
 		break;
 	}
-	
-	sprintf(tmpStr, "%d", int(displacement * get_jog_step()));
+
+	sprintf(tmpStr, "%f", displacement);
 	strcat(commandStr, tmpStr);
 
-	sprintf(tmpStr, "F%d", int(get_jog_rate()));
+	sprintf(tmpStr, "F%d\n", int(get_jog_rate()));
 	strcat(commandStr, tmpStr);
 
-	grblSerial.println(commandStr);
-	Serial.println(commandStr);
+	sendGRBLCommand(commandStr);
+
+//	DEBUG_PRINTLN(commandStr);
 }
 
 void spindle_on(int speed)
@@ -434,14 +503,14 @@ void spindle_on(int speed)
 	char tmpStr[30];
 
 	strcpy(commandStr, "M3S");
-	
-	sprintf(tmpStr, "%d", speed);
+
+	sprintf(tmpStr, "%d\n", speed);
 	strcat(commandStr, tmpStr);
 
-	grblSerial.println(commandStr);
+	sendGRBLCommand(commandStr);
 }
 
 void spindle_off()
 {
-	grblSerial.println("M5");
+	sendGRBLCommand("M5\n");
 }

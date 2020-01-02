@@ -44,7 +44,7 @@
 #define gsSerial        Serial3
 #define GS_SERIAL       115200 
 
-const int BUFFER_SIZE = 70;
+const int BUFFER_SIZE = 100;
 
 // LCD -------------------------------------------
 #define LCD_ADDR		   0x27  // I2C LCD Address
@@ -93,12 +93,14 @@ const int BUFFER_SIZE = 70;
 // only for debugging
 #define DEBUG
 
-//#define DEBUG_IO
+#define DEBUG_IO
 
 #ifdef DEBUG_IO
-#define DEBUG_TXT(str) Serial.println(str);
+#define DEBUG_PRINT(str) Serial.print(str);
+#define DEBUG_PRINTLN(str) Serial.println(str);
 #else
-#define DEBUG_TXT(str); 
+#define DEBUG_PRINT(str); 
+#define DEBUG_PRINTLN(str); 
 #endif
 
 #define VERSION         0.1
@@ -110,7 +112,7 @@ const int BUFFER_SIZE = 70;
 #define GRBL_RX			8
 #define GRBL_TX			9 
 
-enum class GRBLStates  { Idle, Queue, Run, Hold, Home, Alarm, Check };
+enum class GRBLStates { Idle, Run, Hold, Jog, Alarm, Door, Check, Home, Sleep };
 
 //
 // ===============================================
@@ -198,7 +200,7 @@ Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, rows, cols);
 // ------------
 // Pendant Mode
 // ------------
-enum class PendantModes { Monitor, Control};
+enum class PendantModes { Monitor, Control };
 PendantModes pendantMode = PendantModes::Monitor;
 
 // --------------------------
@@ -267,7 +269,7 @@ float currentOvRapidRatePercent;  //Override Percent
 
 
 struct AxisData
-{ 
+{
 	float x;
 	float y;
 	float z;
@@ -280,18 +282,25 @@ float currentOvSpindleSpeedPercent; //Override Percent
 
 AxisData currentWCO;
 
+long lastIdleTimeoutCheck = 0;
+
 // --------------
 // Jog parameters
 // --------------
-enum class CNCAxis { X, Y, Z};
+enum class CNCAxis { X, Y, Z };
 CNCAxis currentJogAxis = CNCAxis::X;
 
 float   jogScalings[] = { 1.0, 10.0, 100.0, 10.0 }; // values are mm per encoder revolution. Last value is adjutable
 const float MaxJogScaling = 500.0;
 uint8_t currentJogScaling = 0;
+const int ENCODER_COUNT = 80;                       // encoder count per rotation
 
 float   jogRates[] = { 60.0, 90.0, 300.0, 600.0, 900.0, 3000.0 }; // values are "units" (mm or inches) per minute
 uint8_t currentJogRate = 2;
+
+int grbl_command_count = 0;
+int grbl_last_command_count = 0;
+float lastJogCommandPosition;
 
 //
 // ===============================================
@@ -374,6 +383,13 @@ void loop()
 	serial_io_grbl();
 	serial_io_gs();
 
+	if (grbl_command_count != grbl_last_command_count)
+	{
+		//DEBUG_PRINT("Command Count:");
+		//DEBUG_PRINTLN(grbl_command_count);
+		grbl_last_command_count = grbl_command_count;
+	}
+
 	// We want this to execute at 50Hz if possible
 	// -------------------------------------------
 	if (millis() - fast_loopTimer > 19) {
@@ -440,12 +456,14 @@ GRBLStates grblState = GRBLStates::Alarm;
 void set_grblState_from_chars(char* tmp)
 {
 	if (strcmp(tmp, "Idle") == 0)    grblState = GRBLStates::Idle;
-	if (strcmp(tmp, "Queue") == 0)   grblState = GRBLStates::Queue;
 	if (strcmp(tmp, "Run") == 0)     grblState = GRBLStates::Run;
 	if (strcmp(tmp, "Hold") == 0)    grblState = GRBLStates::Hold;
-	if (strcmp(tmp, "Home") == 0)    grblState = GRBLStates::Home;
+	if (strcmp(tmp, "Jog") == 0)     grblState = GRBLStates::Jog;
 	if (strcmp(tmp, "Alarm") == 0)   grblState = GRBLStates::Alarm;
+	if (strcmp(tmp, "Door") == 0)    grblState = GRBLStates::Door;
 	if (strcmp(tmp, "Check") == 0)   grblState = GRBLStates::Check;
+	if (strcmp(tmp, "Home") == 0)    grblState = GRBLStates::Home;
+	if (strcmp(tmp, "Sleep") == 0)   grblState = GRBLStates::Sleep;
 }
 
 
@@ -454,7 +472,30 @@ void fast_loop()
 {
 	// This is the fast loop
 	// ---------------------
+	encoderPosition = ReadEncoder();
+	encoderSwitch = ReadEncoderSwitch();
 
+	if (encoderSwitch)
+	{
+		ResetEncoderCount();
+		lastJogCommandPosition = 0.0;
+	}
+
+	if (pendantMode == PendantModes::Control)
+	{
+		float jog_move = float(encoderPosition) / ENCODER_COUNT * get_jog_scaling();
+		if (fabs(jog_move - lastJogCommandPosition) >= 0.001)
+		{
+			if (grbl_command_count < 5)
+			{
+				float jogDelta = jog_move - lastJogCommandPosition;
+				send_jog_command(jogDelta);
+				lastJogCommandPosition = lastJogCommandPosition + jogDelta;
+			}
+		}
+
+		
+	}
 }
 
 void medium_loop()
@@ -471,9 +512,6 @@ void medium_loop()
 
 		delta_ms_medium_loop = millis() - medium_loopTimer;
 		medium_loopTimer = millis();
-
-		encoderPosition = ReadEncoder();
-		encoderSwitch = ReadEncoderSwitch();
 
 		break;
 
@@ -530,21 +568,19 @@ void slow_loop()
 	case 1:
 		slow_loopCounter++;
 
-		if((pendantMode == PendantModes::Control) && (millis() - lastStateRXTime > 1000))
+		if ((pendantMode == PendantModes::Control) && (millis() - lastStateRXTime > 1000))
 		{
-			grblSerial.print("$G\n");
+			sendGRBLCommand("$G\n");
 		}
-
 		break;
 
 	case 2:
 		slow_loopCounter++;
+
 		if ((pendantMode == PendantModes::Control) && (millis() - lastStatusRXTime > 1000))
 		{
-			grblSerial.print("?\n");
+			sendGRBLCommand_NoCount("?");
 		}
-
-
 		break;
 
 	case 3:
@@ -565,6 +601,26 @@ void one_second_loop()
 
 	//sprintf(tmpStr, "Current Position: %f, %f, %f\n", currentPosition.x, currentPosition.y, currentPosition.z);
 	//Serial.print(tmpStr);
+
+
+	if (pendantMode == PendantModes::Control)
+	{
+		if (grblState == GRBLStates::Idle)
+		{
+			if (millis() - lastIdleTimeoutCheck > 5000)
+			{
+				grbl_command_count = 0;
+			}
+		}
+		else
+		{
+			lastIdleTimeoutCheck = millis();
+		}
+	}
+	else
+	{
+		grbl_command_count = 0;
+	}
 }
 
 float get_jog_step()
@@ -593,6 +649,11 @@ float get_jog_step()
 
 float get_jog_rate()
 {
-//	float   jogRates[] = { 60.0, 90.0, 300.0, 600.0, 900.0, 3000.0 }; // values are "units" (mm or inches) per minute
+	//	float   jogRates[] = { 60.0, 90.0, 300.0, 600.0, 900.0, 3000.0 }; // values are "units" (mm or inches) per minute
 	return jogRates[currentJogRate];
+}
+
+float get_jog_scaling()
+{
+	return jogScalings[currentJogScaling];
 }
