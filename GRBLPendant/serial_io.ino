@@ -42,11 +42,9 @@ void serial_io_gs()
 	while (gsSerial.available())
 	{
 		char c = gsSerial.read();
-
-
-		if (c == 0x18)
+		
+		if (c == 0x18)   //  ctrl-x (Soft-Reset), just send it on. 
 		{
-			// If a ctrl-x is received from UGS, just send it on. 
 			grblSerial.write(c);
 
 			// flush the buffer
@@ -54,12 +52,19 @@ void serial_io_gs()
 			memset(&pcserial[0], 0, sizeof(pcserial));
 			pcserial[0] = '\0';
 		}
-		else if (c == '?')
+		else if (c == '?')           //Status Report Query, just send it on. 
 		{
-			// If a ctrl-x is received from UGS, just send it on. 
 			grblSerial.write(c);
 		}
-		else if (c == '\n') 
+		else if (c == '~')           //Cycle Start / Resume, just send it on. 
+		{
+			grblSerial.write(c);
+		}
+		else if (c == '!')           //Feed Hold, just send it on. 
+		{
+			grblSerial.write(c);
+		}
+		else if (c == '\n')
 		{
 			// wait for a complete line
 			// and parse it
@@ -75,8 +80,6 @@ void serial_io_gs()
 				pcserial[pc++] = c;
 			}
 		}
-
-
 
 	}
 }
@@ -153,6 +156,9 @@ void parseGrblLine(char* line_in)
 			gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
 			gsSerial.print("\n");
 		}
+		//strcpy(lastMessage, LCD_EMPTY);
+		//lastMessage[sizeof(lastMessage) - 1] = '/0';
+		//strncpy(lastMessage, line_in, sizeof(lastMessage) - 1);
 	}
 	else if (strncmp(line, "error", 5) == 0)
 	{
@@ -161,6 +167,9 @@ void parseGrblLine(char* line_in)
 			gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
 			gsSerial.print("\n");
 		}
+		strcpy(lastMessage, LCD_EMPTY);
+		lastMessage[sizeof(lastMessage)-1] = '/0';
+		strncpy(lastMessage, line_in, sizeof(lastMessage) - 1);
 	}
 	else if (strncmp(line, "ALARM", 5) == 0)
 	{
@@ -169,6 +178,9 @@ void parseGrblLine(char* line_in)
 			gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
 			gsSerial.print("\n");
 		}
+		strcpy(lastMessage, LCD_EMPTY);
+		lastMessage[sizeof(lastMessage) - 1] = '/0';
+		strncpy(lastMessage, line_in, sizeof(lastMessage) - 1);
 	}
 	else
 	{

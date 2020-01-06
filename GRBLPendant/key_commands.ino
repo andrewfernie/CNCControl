@@ -15,57 +15,34 @@ void ProcessKey(char key)
 	switch (key)
 	{
 	case '1':
-		currentJogScaling = 0;
+
 		break;
 
 	case '2':
-		currentJogAxis = CNCAxis::X;
+		// Jog +
+		ResetEncoderJog();
+		if (pendantMode == PendantModes::Control)
+		{
+			send_jog_command(+1.0 * get_jog_step());
+		}
 		break;
 
 	case '3':
+		// Jog -
+		ResetEncoderJog();
 		if (pendantMode == PendantModes::Control)
 		{
-			spindle_on(100);
+			send_jog_command(-1.0 * get_jog_step());
 		}
 		break;
 
 	case '4':
-		// Unlock
-		sendGRBLCommand("$X\n");
+
+		currentJogScaling = 3;
+		ResetEncoderJog();
 		break;
 
 	case '5':
-		currentJogScaling = 1;
-		break;
-
-	case '6':
-		currentJogAxis = CNCAxis::Y;
-		break;
-
-	case '7':
-		if (pendantMode == PendantModes::Control)
-		{
-			spindle_off();
-		}
-		break;
-
-	case '8':
-		// Home
-		sendGRBLCommand("$H\n");
-		break;
-
-	case '9':
-		currentJogScaling = 2;
-		break;
-
-	case '0':
-		currentJogAxis = CNCAxis::Z;
-		break;
-
-	case 'A':
-		break;
-
-	case 'B':
 		if (pendantMode == PendantModes::Control)
 		{
 			pendantMode = PendantModes::Monitor;
@@ -74,30 +51,66 @@ void ProcessKey(char key)
 		{
 			pendantMode = PendantModes::Control;
 		}
+		ResetEncoderJog();
+		break;
 
+	case '6':
+
+		break;
+
+	case '7':
+		currentJogAxis = CNCAxis::Z;
+		ResetEncoderJog();
+		break;
+
+	case '8':
+		currentJogScaling = 2;
+		ResetEncoderJog();
+		break;
+
+	case '9':
+		// Home
+		sendGRBLCommand("$H\n");
+		break;
+
+	case '0':
+		if (pendantMode == PendantModes::Control)
+		{
+			spindle_on(100);
+		}
+		break;
+
+	case 'A':
+		currentJogAxis = CNCAxis::Y;
+		ResetEncoderJog();
+		break;
+
+	case 'B':
+		currentJogScaling = 1;
+		ResetEncoderJog();
 		break;
 
 	case 'C':
-		currentJogScaling = 3;
+		// Unlock
+		sendGRBLCommand("$X\n");
 		break;
 
 	case 'D':
-		// Jog -
 		if (pendantMode == PendantModes::Control)
 		{
-			send_jog_command(-1.0 * get_jog_step());
+			spindle_off();
 		}
 		break;
 
 	case 'E':
-		// Jog +
-		if (pendantMode == PendantModes::Control)
-		{
-			send_jog_command(+1.0 * get_jog_step());
-		}
+
+		currentJogAxis = CNCAxis::X;
+		ResetEncoderJog();
 		break;
 
 	case 'F':
+		currentJogScaling = 0;
+		ResetEncoderJog();
 		break;
 
 		//default:

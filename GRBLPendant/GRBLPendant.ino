@@ -48,15 +48,16 @@ const int BUFFER_SIZE = 100;
 
 // LCD -------------------------------------------
 #define LCD_ADDR		   0x27  // I2C LCD Address
+#define LCD2_ADDR		   0x23  // I2C LCD Address
 //#define LCD_4BIT
 
 #define LCD_cols			20
 #define LCD_rows			4
 
 #if(LCD_cols==16)
-#define LCD_EMPTY   F("                ")
+#define LCD_EMPTY   ("                ")
 #else
-#define LCD_EMPTY   F("                    ")
+#define LCD_EMPTY   ("                    ")
 #endif
 
 #if defined(LCD_4BIT)
@@ -79,9 +80,10 @@ const int BUFFER_SIZE = 100;
 
 #if defined(MODE_PROXY)
    // Rotary Encoder --------------------------------
-#define ENC_A              2     // Encoder interrupt pin
-#define ENC_B              3     // Encoder second pin
-#define ENC_S              4     // Encoder select pin
+#define ENC_A				2     // Encoder interrupt pin
+#define ENC_B				3     // Encoder second pin
+#define ENC_S				4     // Encoder select pin
+const int ENCODER_COUNT =	400;  // encoder count per rotation
 
 // EEPROM addresses
 #define EEPROM_BUTTONS		100
@@ -146,6 +148,7 @@ LiquidCrystal myLCD(LCD_EN, LCD_RW, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
 // Set the pins on the I2C chip used for LCD connections:
 //                         addr, en,rw,rs,d4,d5,d6,d7,bl,blpol
 LiquidCrystal_I2C myLCD(LCD_ADDR, LCD_EN, LCD_RW, LCD_RS, LCD_D4, LCD_D5, LCD_D6, LCD_D7, 3, POSITIVE);  // Set the LCD I2C address
+LiquidCrystal_I2C myLCD2(LCD2_ADDR, LCD_EN, LCD_RW, LCD_RS, LCD_D4, LCD_D5, LCD_D6, LCD_D7, 3, POSITIVE);  // Set the LCD I2C address
 #endif
 
 // -------------
@@ -267,6 +270,7 @@ float currentFeedRate;
 float currentOvFeedRatePercent;  //Override Percent
 float currentOvRapidRatePercent;  //Override Percent
 
+char lastMessage[LCD_cols];
 
 struct AxisData
 {
@@ -293,7 +297,6 @@ CNCAxis currentJogAxis = CNCAxis::X;
 float   jogScalings[] = { 1.0, 10.0, 100.0, 10.0 }; // values are mm per encoder revolution. Last value is adjutable
 const float MaxJogScaling = 500.0;
 uint8_t currentJogScaling = 0;
-const int ENCODER_COUNT = 80;                       // encoder count per rotation
 
 float   jogRates[] = { 60.0, 90.0, 300.0, 600.0, 900.0, 3000.0 }; // values are "units" (mm or inches) per minute
 uint8_t currentJogRate = 2;
@@ -328,6 +331,7 @@ void setup()
 	//simpleThread_dynamic_setLoopTime(getStates,		EEPROMReadInt(EEPROM_INTERVAL));
 
 	myLCD.begin(LCD_cols, LCD_rows);
+	myLCD2.begin(LCD_cols, LCD_rows);
 
 	// This is the serial connect to PC, we get some commands
 	// but we can also print some additional information about this module
@@ -338,14 +342,22 @@ void setup()
 	Serial.println(F("<All commands start with a colon ':'>"));
 	Serial.println(F("<Call help with ':?'>"));
 
-	// Old LCD Screens
-	myLCD.begin(LCD_cols, LCD_rows); // letter, row
 
 	myLCD.setCursor(0, 0); // letter, row
 	myLCD.print(F("GRBL Pendant "));
 	myLCD.print(VERSION);
 	myLCD.setCursor(0, 1); // letter, row
 	myLCD.print(F("Connect ... "));
+	myLCD.setCursor(0, 2); // letter, row
+	myLCD.print(F("LCD #1 "));
+
+	myLCD2.setCursor(0, 0); // letter, row
+	myLCD2.print(F("GRBL Pendant "));
+	myLCD2.print(VERSION);
+	myLCD2.setCursor(0, 1); // letter, row
+	myLCD2.print(F("Connect ... "));	
+	myLCD2.setCursor(0, 2); // letter, row
+	myLCD2.print(F("LCD #2 "));
 
 	delay(2000);
 
@@ -359,6 +371,8 @@ void setup()
 
 
 	myLCD.clear();
+	myLCD2.clear();
+
 }//SETUP
 
 
@@ -568,10 +582,8 @@ void slow_loop()
 	case 1:
 		slow_loopCounter++;
 
-		if ((pendantMode == PendantModes::Control) && (millis() - lastStateRXTime > 1000))
-		{
-			sendGRBLCommand("$G\n");
-		}
+		display_jogscreen();
+
 		break;
 
 	case 2:
@@ -585,6 +597,11 @@ void slow_loop()
 
 	case 3:
 		slow_loopCounter++;
+
+		if ((pendantMode == PendantModes::Control) && (millis() - lastStateRXTime > 1000))
+		{
+			sendGRBLCommand("$G\n");
+		}
 
 		break;
 

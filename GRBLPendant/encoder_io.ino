@@ -44,3 +44,8 @@ bool ReadEncoderSwitch()
 #endif
 }
 
+void ResetEncoderJog()
+{
+	ResetEncoderCount();
+	lastJogCommandPosition = 0.0;
+}

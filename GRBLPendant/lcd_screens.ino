@@ -17,14 +17,13 @@ void display_state()
 // Display on LCD ...
 // lcd screen
 // |------------------|
-// State  WPos  555.529
-// 000.000      000.000
+// State  WPos  
+// 
 // S1 T1          F1000
 // MM LIN XY M1
 
 
 	char tmpStr[LCD_cols];
-	int len;
 
 	// ---------
 	// First Row
@@ -45,7 +44,7 @@ void display_state()
 		break;
 
 	case GRBLStates::Jog:
-		strcpy(tmpStr, "Jog");
+		strcpy(tmpStr, "Jog  ");
 		break;
 
 	case GRBLStates::Alarm:
@@ -53,7 +52,7 @@ void display_state()
 		break;
 
 	case GRBLStates::Door:
-		strcpy(tmpStr, "Door");
+		strcpy(tmpStr, "Door ");
 		break;
 
 	case GRBLStates::Check:
@@ -75,40 +74,12 @@ void display_state()
 	myLCD.setCursor(0, 0); // letter, row
 	myLCD.print(tmpStr);
 
-	// Pendant Mode
-	myLCD.setCursor(7, 0); 
-	switch (pendantMode)
-	{
-	case PendantModes::Monitor:
-		myLCD.print("Mntr");
-		break;
-	case PendantModes::Control:
-		myLCD.print("Ctrl");
-		break;
-	default:
-		myLCD.print("----");
-	}
-
-	// Z position
-	sprintf(tmpStr, "%9.3f", currentPosition.z);
-	len = strlen(tmpStr);
-	myLCD.setCursor((LCD_cols - len), 0);
-	myLCD.print(tmpStr);
-
-	// ---------
+	// ----------
 	// Second Row
-	// X position
-	sprintf(tmpStr, "%-9.3f", currentPosition.x);
-	len = strlen(tmpStr);
-	myLCD.setCursor(0, 1);
-	myLCD.print(tmpStr);
-
-	// Y position
-	sprintf(tmpStr, "%9.3f", currentPosition.y);
-	len = strlen(tmpStr);
-	myLCD.setCursor((LCD_cols - len), 1);
-	myLCD.print(tmpStr);
-
+	myLCD.setCursor(0, 1); // letter, row
+	myLCD.print(LCD_EMPTY);
+	myLCD.setCursor(0, 1); // letter, row
+	myLCD.print(lastMessage);
 
 	// ---------
 	// Third Row
@@ -160,20 +131,6 @@ void display_state()
 	
 	myLCD.setCursor(0, 3);
 
-	// Units
-	switch (currentUnitsMode)
-	{
-	case UnitsMode::Inches:
-		myLCD.print("in");
-		break;
-	case UnitsMode::mm:
-		myLCD.print("mm");
-		break;
-	default:
-		myLCD.print("--");
-	}
-
-	myLCD.print(" ");
 
 	// Plane
 	switch (currentPlaneSelect)
@@ -208,10 +165,10 @@ void display_state()
 		strcpy(tmpStr,"Pause");
 		break;
 	case ProgramMode::End:
-		strcpy(tmpStr,"End");
+		strcpy(tmpStr,"End  ");
 		break;
 	case ProgramMode::Rewind:
-		strcpy(tmpStr,"Rwnd");
+		strcpy(tmpStr,"Rwnd ");
 		break;
 	default:
 		strcpy(tmpStr,"-----");
@@ -219,4 +176,124 @@ void display_state()
 
     myLCD.setCursor((LCD_cols - strlen(tmpStr)), 3);
     myLCD.print(tmpStr);
+}
+
+
+
+void display_jogscreen()
+{
+
+	// Display on LCD ...
+	// lcd screen
+	// |------------------|
+	// WPos         555.529
+	// 000.000      000.000
+	// 
+	//
+
+	char tmpStr[LCD_cols];
+	int len;
+
+	// ---------
+	// First Row
+
+	
+
+	// Pendant Mode
+	myLCD2.setCursor(0, 0);
+	switch (pendantMode)
+	{
+	case PendantModes::Monitor:
+		myLCD2.print("Mntr");
+		break;
+	case PendantModes::Control:
+		myLCD2.print("Ctrl");
+		break;
+	default:
+		myLCD2.print("----");
+	}
+
+	// Units
+	myLCD2.setCursor(10, 0);
+	switch (currentUnitsMode)
+	{
+	case UnitsMode::Inches:
+		myLCD2.print("in");
+		break;
+	case UnitsMode::mm:
+		myLCD2.print("mm");
+		break;
+	default:
+		myLCD2.print("--");
+	}
+
+	// Coordinate system
+	sprintf(tmpStr, "%4s", positionCoordSystem);
+	len = strlen(tmpStr);
+	myLCD2.setCursor((LCD_cols - len), 0);
+	myLCD2.print(tmpStr);
+	
+	// ---------
+	// Second Row
+
+	// X position
+	sprintf(tmpStr, "X%8.2f", currentPosition.x);
+	len = strlen(tmpStr);
+	myLCD2.setCursor(0, 1);
+	myLCD2.print(tmpStr);
+
+	// Y position
+	sprintf(tmpStr, "Y%8.2f", currentPosition.y);
+	len = strlen(tmpStr);
+	myLCD2.setCursor((LCD_cols - len), 1);
+	myLCD2.print(tmpStr);
+
+
+	// ---------
+	// Third Row
+
+	// Z position
+	sprintf(tmpStr, "Z%8.2f", currentPosition.z);
+	len = strlen(tmpStr);
+	myLCD2.setCursor(0, 2);
+	myLCD2.print(tmpStr);
+
+	// ---------
+	// Fourth Row
+
+	myLCD2.setCursor(0, 3);
+
+
+	// Jog Axis
+	switch (currentJogAxis)
+	{
+	case CNCAxis::X:
+		myLCD2.print("Jog: X");
+		break;
+	case CNCAxis::Y:
+		myLCD2.print("Jog: Y");
+		break;
+	case CNCAxis::Z:
+		myLCD2.print("Jog: Z");
+		break;
+	default:
+		myLCD2.print("-");
+	}
+
+	// Jog Step
+	sprintf(tmpStr, "%5.1f", jogScalings[currentJogScaling]);
+	len = strlen(tmpStr);
+
+	myLCD2.setCursor(7, 3);
+	myLCD2.print(tmpStr);
+	
+
+	// Jog Rate
+	sprintf(tmpStr, "%6.1f", jogRates[currentJogRate]);
+	len = strlen(tmpStr);
+	myLCD2.setCursor((LCD_cols - len), 3);
+	myLCD2.print(tmpStr);
+
+	
+	
 }
