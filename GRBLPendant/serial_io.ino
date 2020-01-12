@@ -168,7 +168,7 @@ void parseGrblLine(char* line_in)
 			gsSerial.print("\n");
 		}
 		strcpy(lastMessage, LCD_EMPTY);
-		lastMessage[sizeof(lastMessage)-1] = '/0';
+		lastMessage[sizeof(lastMessage)-1] = 0;
 		strncpy(lastMessage, line_in, sizeof(lastMessage) - 1);
 	}
 	else if (strncmp(line, "ALARM", 5) == 0)
@@ -179,7 +179,7 @@ void parseGrblLine(char* line_in)
 			gsSerial.print("\n");
 		}
 		strcpy(lastMessage, LCD_EMPTY);
-		lastMessage[sizeof(lastMessage) - 1] = '/0';
+		lastMessage[sizeof(lastMessage) - 1] = 0;
 		strncpy(lastMessage, line_in, sizeof(lastMessage) - 1);
 	}
 	else

@@ -19,7 +19,6 @@
 #include <Keypad.h>
 #include <Key.h>
 #include <EEPROM.h>
-#include <simpleThread.h>
 #include <Encoder.h>
 
 //
@@ -131,19 +130,6 @@ GRBLStates grblState = GRBLStates::Alarm;
 // ===============================================
 //
 
-
- // Add Threads to refresh status informations from GRBL
-#define _sT_cnt  _sT_cnt_3    // count of threads(?, $G)
-simpleThread_init(_sT_cnt);   // init threads
-simpleThread_new_timebased_dynamic(_sT_P1, _sT_millis, 5000, _sT_start, getPositions);	// get position info (?)
-simpleThread_new_timebased_dynamic(_sT_P2, _sT_millis, 5000, _sT_start, getStates);	// get state info ($G) (not supported from UniversalGcodeSender)
-simpleThread_new_timebased_dynamic(_sT_P3, _sT_millis, 200, _sT_start, readButtons);	// get button value
-
-// make a group
-simpleThread_group_init(group_one, 2) {
-	simpleThread_group(getPositions),
-		simpleThread_group(getStates)
-};
 
 // -------------------------
 // All inits for LCD control
@@ -351,10 +337,7 @@ void setup()
 	pinMode(JOG_ENC_S, INPUT);      // sets the encoder select digital pin
 #endif
 
-   // init threads //
-	simpleThread_initSetup(_sT_cnt);
-	//simpleThread_dynamic_setLoopTime(getPositions,	EEPROMReadInt(EEPROM_INTERVAL));
-	//simpleThread_dynamic_setLoopTime(getStates,		EEPROMReadInt(EEPROM_INTERVAL));
+   // init LCD Displays //
 
 	JogLCD.begin(LCD_cols, LCD_rows);
 	StatusLCD.begin(LCD_cols, LCD_rows);
@@ -418,7 +401,6 @@ uint32_t  lastLCDOut = 0;
 void loop()
 {
 	// Jobs
-	// simpleThread_run(_sT_priority);
 
 	serial_io_grbl();
 	serial_io_gs();
@@ -718,4 +700,22 @@ float get_jog_rate()
 float get_jog_scaling()
 {
 	return jogScalings[currentJogScaling];
+}
+
+uint32_t freeMem()
+{
+	// for Teensy 3.2
+	uint32_t stackTop;
+	uint32_t heapTop;
+
+	// current position of the stack.
+	stackTop = (uint32_t)& stackTop;
+
+	// current position of heap.
+	void* hTop = malloc(1);
+	heapTop = (uint32_t)hTop;
+	free(hTop);
+
+	// The difference is (approximately) the free, available ram.
+	return stackTop - heapTop;
 }

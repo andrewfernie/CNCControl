@@ -38,10 +38,12 @@ void ResetUIEncoderCount()
 //--------------------------------------------------------------------------------------
 bool ReadUIEncoderSwitch()
 {
+	bool sw = false;
 #ifdef UI_ENC_S
 	// Rotary Encoder Select
-	return !digitalRead(UI_ENC_S);
+	sw = !digitalRead(UI_ENC_S);
 #endif
+	return sw;
 }
 
 void ResetUIEncoder()
@@ -79,10 +81,12 @@ void ResetJogEncoderCount()
 //--------------------------------------------------------------------------------------
 bool ReadJogEncoderSwitch()
 {
+	bool sw = false;
 #ifdef JOG_ENC_S
 	// Rotary Encoder Select
-	return !digitalRead(JOG_ENC_S);
+	sw = !digitalRead(JOG_ENC_S);
 #endif
+	return sw;
 }
 
 void ResetJogEncoder()

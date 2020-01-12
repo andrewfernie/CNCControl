@@ -66,18 +66,6 @@ void setinterval(int ms)
 
 	EEPROMWriteInt(EEPROM_INTERVAL, ms);
 
-	if (ms == -1)
-	{
-		simpleThread_group_stop(group_one);
-		return;
-	}
-	if (ms > 0)
-	{
-		simpleThread_dynamic_setLoopTime(getPositions, ms);
-		simpleThread_dynamic_setLoopTime(getStates, ms);
-
-		simpleThread_group_restart(group_one);
-	}
 }
 
 void resetDevice(int n)
