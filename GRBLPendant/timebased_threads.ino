@@ -52,9 +52,9 @@ boolean simpleThread_loop(getPositions)
 	sendGRBLCommand("?");
 
 #if defined(DEBUG)
-	Serial.print(F("<Free "));
-	Serial.print(freeMem());
-	Serial.println(F(">"));
+	debugSerial.print(F("<Free "));
+	debugSerial.print(freeMem());
+	debugSerial.println(F(">"));
 #endif
 
 	return false;

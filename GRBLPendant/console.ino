@@ -15,15 +15,15 @@ void parse_command_line(char* line)
 	if (line[1] == '?')
 	{
 		// Display Menu from this device
-		Serial.print(F("<GRBL Pendant "));
-		Serial.print(VERSION);
-		Serial.println(F(" MENU>"));
+		debugSerial.print(F("<GRBL Pendant "));
+		debugSerial.print(VERSION);
+		debugSerial.println(F(" MENU>"));
 
-		Serial.println(F("<:f\tShow free RAM>"));
+		debugSerial.println(F("<:f\tShow free RAM>"));
 
-		Serial.println(F("<:i ms\tSet or get interval in microseconds>"));
+		debugSerial.println(F("<:i ms\tSet or get interval in microseconds>"));
 
-		Serial.println(F("<:r\tReset device>"));
+		debugSerial.println(F("<:r\tReset device>"));
 		return;
 	}
 	// Commands handle:
@@ -31,16 +31,16 @@ void parse_command_line(char* line)
 	if (line[1] == 'i') return setinterval(line);
 	if (line[1] == 'r') return resetDevice(0);
 
-	Serial.print(F("Cant parse this command: "));
-	Serial.println(line);
+	debugSerial.print(F("Cant parse this command: "));
+	debugSerial.println(line);
 }
 
 
 
 void free_ram()
 {
-	Serial.print(F("Free ram: "));
-	Serial.println(freeMem());
+	debugSerial.print(F("Free ram: "));
+	debugSerial.println(freeMem());
 }
 
 
@@ -52,17 +52,17 @@ void setinterval(char* line)
 		setinterval(ms);
 	}
 	else {
-		Serial.print(F("<Interval: "));
-		Serial.print(EEPROMReadInt(EEPROM_INTERVAL));
-		Serial.println(F(">"));
+		debugSerial.print(F("<Interval: "));
+		debugSerial.print(EEPROMReadInt(EEPROM_INTERVAL));
+		debugSerial.println(F(">"));
 	}
 }
 
 void setinterval(int ms)
 {
-	Serial.print(F("<Interval: "));
-	Serial.print(ms);
-	Serial.println(F(">"));
+	debugSerial.print(F("<Interval: "));
+	debugSerial.print(ms);
+	debugSerial.println(F(">"));
 
 	EEPROMWriteInt(EEPROM_INTERVAL, ms);
 
@@ -82,7 +82,7 @@ void setinterval(int ms)
 
 void resetDevice(int n)
 {
-	Serial.println(F("Reset device ... "));
+	debugSerial.println(F("Reset device ... "));
 	grblSerial.write(0x18);
 	delay(100);
 	//asm volatile ("jmp 0x0000");

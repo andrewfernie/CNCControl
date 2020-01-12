@@ -34,14 +34,15 @@
 					 // (no buttons, no serial console, no interaction with grbl)
 
 // Normal serial for debug ----------------------------------
-#define PC_SERIAL       115200  
+#define debugSerial     Serial3
+#define DEBUG_SERIAL    115200  
 
 // Serial to GRBL
 #define grblSerial      Serial2
 #define GRBL_SERIAL     115200 
 
 // G-Code sender. Must be as fast as grbl!
-#define gsSerial        Serial3
+#define gsSerial        Serial
 #define GS_SERIAL       115200 
 
 const int BUFFER_SIZE = 100;
@@ -78,12 +79,18 @@ const int BUFFER_SIZE = 100;
 #endif
 
 
+// UI Rotary Encoder --------------------------------
+#define UI_ENC_A				4     // Encoder interrupt pin
+#define UI_ENC_B				5     // Encoder second pin
+#define UI_ENC_S				6     // Encoder select pin
+const int UI_ENC_COUNT = 80;  // encoder count per rotation
+
 #if defined(MODE_PROXY)
    // Rotary Encoder --------------------------------
-#define ENC_A				2     // Encoder interrupt pin
-#define ENC_B				3     // Encoder second pin
-#define ENC_S				4     // Encoder select pin
-const int ENCODER_COUNT =	400;  // encoder count per rotation
+#define JOG_ENC_A				2     // Encoder interrupt pin
+#define JOG_ENC_B				3     // Encoder second pin
+//#define JOG_ENC_S				4     // Encoder select pin
+const int JOG_ENC_COUNT =	400;  // encoder count per rotation
 
 // EEPROM addresses
 #define EEPROM_BUTTONS		100
@@ -98,11 +105,11 @@ const int ENCODER_COUNT =	400;  // encoder count per rotation
 #define DEBUG_IO
 
 #ifdef DEBUG_IO
-#define DEBUG_PRINT(str) Serial.print(str);
-#define DEBUG_PRINTLN(str) Serial.println(str);
+#define DEBUG_PRINT(str) debugSerial.print(str)
+#define DEBUG_PRINTLN(str) debugSerial.println(str)
 #else
-#define DEBUG_PRINT(str); 
-#define DEBUG_PRINTLN(str); 
+#define DEBUG_PRINT(str)
+#define DEBUG_PRINTLN(str)
 #endif
 
 #define VERSION         0.1
@@ -115,6 +122,8 @@ const int ENCODER_COUNT =	400;  // encoder count per rotation
 #define GRBL_TX			9 
 
 enum class GRBLStates { Idle, Run, Hold, Jog, Alarm, Door, Check, Home, Sleep };
+// State set or get state from machine
+GRBLStates grblState = GRBLStates::Alarm;
 
 //
 // ===============================================
@@ -141,28 +150,41 @@ simpleThread_group_init(group_one, 2) {
 // -------------------------
 #if defined(LCD_4BIT)
 #include <LiquidCrystal.h>   // LCD
-LiquidCrystal myLCD(LCD_EN, LCD_RW, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
+LiquidCrystal JogLCD(LCD_EN, LCD_RW, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
 #elif defined(LCD_ADDR)
 #include <Wire.h>                // I2C Communication
 #include <LiquidCrystal_I2C.h>   // LCD over I2C
 // Set the pins on the I2C chip used for LCD connections:
 //                         addr, en,rw,rs,d4,d5,d6,d7,bl,blpol
-LiquidCrystal_I2C myLCD(LCD_ADDR, LCD_EN, LCD_RW, LCD_RS, LCD_D4, LCD_D5, LCD_D6, LCD_D7, 3, POSITIVE);  // Set the LCD I2C address
-LiquidCrystal_I2C myLCD2(LCD2_ADDR, LCD_EN, LCD_RW, LCD_RS, LCD_D4, LCD_D5, LCD_D6, LCD_D7, 3, POSITIVE);  // Set the LCD I2C address
+LiquidCrystal_I2C StatusLCD(LCD_ADDR, LCD_EN, LCD_RW, LCD_RS, LCD_D4, LCD_D5, LCD_D6, LCD_D7, 3, POSITIVE);  // Set the LCD I2C address
+LiquidCrystal_I2C JogLCD(LCD2_ADDR, LCD_EN, LCD_RW, LCD_RS, LCD_D4, LCD_D5, LCD_D6, LCD_D7, 3, POSITIVE);  // Set the LCD I2C address
 #endif
 
 // -------------
 // RotaryEncoder
 // -------------
-#ifdef ENC_A
-Encoder encoder(ENC_A, ENC_B);
-long encoderPosition = -999;
-bool encoderSwitch = false;
+
+#ifdef UI_ENC_A
+Encoder uiEncoder(UI_ENC_A, UI_ENC_B);
+long uiEncoderPosition = -999;
+#endif
+
+#ifdef UI_ENC_S
+bool uiEncoderSwitch = false;
+#endif
+
+#ifdef JOG_ENC_A
+Encoder jogEncoder(JOG_ENC_A, JOG_ENC_B);
+long jogEncoderPosition = -999;
+#endif
+
+#ifdef JOG_ENC_S
+bool jogEncoderSwitch = false;
 #endif
 
 // LCD Menu
 // look in lcd_menu.ino for build menus
-// LCDMenu menu(&myLCD, LCD_cols, LCD_rows);
+// LCDMenu menu(&JogLCD, LCD_cols, LCD_rows);
 
 long lastStatusRXTime = 0;
 long lastStateRXTime = 0;
@@ -317,12 +339,16 @@ float lastJogCommandPosition;
 
 void setup()
 {
-	Serial.begin(PC_SERIAL);   // open serial to PC
+	debugSerial.begin(DEBUG_SERIAL);   // open serial for debug/status messages
 
+#ifdef UI_ENC_S
+// set Select pin from Rotary Encoder to input
+	pinMode(UI_ENC_S, INPUT);      // sets the encoder select digital pin
+#endif
 
-#ifdef ENC_S
+#ifdef JOG_ENC_S
 	// set Select pin from Rotary Encoder to input
-	pinMode(ENC_S, INPUT);      // sets the encoder select digital pin
+	pinMode(JOG_ENC_S, INPUT);      // sets the encoder select digital pin
 #endif
 
    // init threads //
@@ -330,34 +356,34 @@ void setup()
 	//simpleThread_dynamic_setLoopTime(getPositions,	EEPROMReadInt(EEPROM_INTERVAL));
 	//simpleThread_dynamic_setLoopTime(getStates,		EEPROMReadInt(EEPROM_INTERVAL));
 
-	myLCD.begin(LCD_cols, LCD_rows);
-	myLCD2.begin(LCD_cols, LCD_rows);
+	JogLCD.begin(LCD_cols, LCD_rows);
+	StatusLCD.begin(LCD_cols, LCD_rows);
 
 	// This is the serial connect to PC, we get some commands
 	// but we can also print some additional information about this module
 	// and the parser from Client program will ignore this
-	Serial.print(F("<GRBLPendant "));
-	Serial.print(VERSION);
-	Serial.println(F(">"));
-	Serial.println(F("<All commands start with a colon ':'>"));
-	Serial.println(F("<Call help with ':?'>"));
+	debugSerial.print(F("<GRBLPendant "));
+	debugSerial.print(VERSION);
+	debugSerial.println(F(">"));
+	debugSerial.println(F("<All commands start with a colon ':'>"));
+	debugSerial.println(F("<Call help with ':?'>"));
 
 
-	myLCD.setCursor(0, 0); // letter, row
-	myLCD.print(F("GRBL Pendant "));
-	myLCD.print(VERSION);
-	myLCD.setCursor(0, 1); // letter, row
-	myLCD.print(F("Connect ... "));
-	myLCD.setCursor(0, 2); // letter, row
-	myLCD.print(F("LCD #1 "));
+	JogLCD.setCursor(0, 0); // letter, row
+	JogLCD.print(F("GRBL Pendant "));
+	JogLCD.print(VERSION);
+	JogLCD.setCursor(0, 1); // letter, row
+	JogLCD.print(F("Connect ... "));
+	JogLCD.setCursor(0, 2); // letter, row
+	JogLCD.print(F("LCD #1 "));
 
-	myLCD2.setCursor(0, 0); // letter, row
-	myLCD2.print(F("GRBL Pendant "));
-	myLCD2.print(VERSION);
-	myLCD2.setCursor(0, 1); // letter, row
-	myLCD2.print(F("Connect ... "));	
-	myLCD2.setCursor(0, 2); // letter, row
-	myLCD2.print(F("LCD #2 "));
+	StatusLCD.setCursor(0, 0); // letter, row
+	StatusLCD.print(F("GRBL Pendant "));
+	StatusLCD.print(VERSION);
+	StatusLCD.setCursor(0, 1); // letter, row
+	StatusLCD.print(F("Connect ... "));	
+	StatusLCD.setCursor(0, 2); // letter, row
+	StatusLCD.print(F("LCD #2 "));
 
 	delay(2000);
 
@@ -370,8 +396,8 @@ void setup()
 	grblSerial.write(0x18);
 
 
-	myLCD.clear();
-	myLCD2.clear();
+	JogLCD.clear();
+	StatusLCD.clear();
 
 }//SETUP
 
@@ -436,68 +462,38 @@ void loop()
 }//LOOP
 
 
-// ---------- Subroutines -----------
-
-//
-// split a string on one or more delimiter
-// and return split at index
-// split(char* string[] = "1,2;3")
-//
-char* split(char* string, char* delimiter, int index)
-{
-	char* ptr;
-
-	char buffer[BUFFER_SIZE];
-	strcpy(buffer, string);
-
-	// init and create first cut
-	ptr = strtok(buffer, delimiter);
-	int x = 0;
-	while (ptr != NULL) {
-		if (x++ >= index)
-			break;
-		// next one
-		ptr = strtok(NULL, delimiter);
-	}
-
-	return ptr;
-}
-
-
-// State set or get state from machine
-GRBLStates grblState = GRBLStates::Alarm;
-
-void set_grblState_from_chars(char* tmp)
-{
-	if (strcmp(tmp, "Idle") == 0)    grblState = GRBLStates::Idle;
-	if (strcmp(tmp, "Run") == 0)     grblState = GRBLStates::Run;
-	if (strcmp(tmp, "Hold") == 0)    grblState = GRBLStates::Hold;
-	if (strcmp(tmp, "Jog") == 0)     grblState = GRBLStates::Jog;
-	if (strcmp(tmp, "Alarm") == 0)   grblState = GRBLStates::Alarm;
-	if (strcmp(tmp, "Door") == 0)    grblState = GRBLStates::Door;
-	if (strcmp(tmp, "Check") == 0)   grblState = GRBLStates::Check;
-	if (strcmp(tmp, "Home") == 0)    grblState = GRBLStates::Home;
-	if (strcmp(tmp, "Sleep") == 0)   grblState = GRBLStates::Sleep;
-}
-
-
 // Main loop
 void fast_loop()
 {
 	// This is the fast loop
 	// ---------------------
-	encoderPosition = ReadEncoder();
-	encoderSwitch = ReadEncoderSwitch();
 
-	if (encoderSwitch)
+	uiEncoderPosition = ReadUIEncoder();
+
+	
+#ifdef UI_ENC_S
+	uiEncoderSwitch = ReadUIEncoderSwitch();
+
+	if (uiEncoderSwitch)
 	{
-		ResetEncoderCount();
+	}
+#endif
+
+	jogEncoderPosition = ReadJogEncoder();
+
+#ifdef JOG_ENC_S
+	jogEncoderSwitch = ReadJogEncoderSwitch();
+
+	if (jogEncoderSwitch)
+	{
+		ResetJogEncoderCount();
 		lastJogCommandPosition = 0.0;
 	}
+#endif
 
 	if (pendantMode == PendantModes::Control)
 	{
-		float jog_move = float(encoderPosition) / ENCODER_COUNT * get_jog_scaling();
+		float jog_move = float(jogEncoderPosition) / JOG_ENC_COUNT * get_jog_scaling();
 		if (fabs(jog_move - lastJogCommandPosition) >= 0.001)
 		{
 			if (grbl_command_count < 5)
@@ -608,6 +604,14 @@ void slow_loop()
 	case 4:
 		slow_loopCounter = 0;
 
+		DEBUG_PRINTLN(ReadUIEncoder());
+
+		if (ReadUIEncoderSwitch())
+			DEBUG_PRINTLN("TRUE");
+		else
+			DEBUG_PRINTLN("FALSE");
+
+
 		break;
 	}
 }
@@ -617,7 +621,7 @@ void one_second_loop()
 	//char tmpStr[80];
 
 	//sprintf(tmpStr, "Current Position: %f, %f, %f\n", currentPosition.x, currentPosition.y, currentPosition.z);
-	//Serial.print(tmpStr);
+	//debugSerial.print(tmpStr);
 
 
 	if (pendantMode == PendantModes::Control)
@@ -638,6 +642,47 @@ void one_second_loop()
 	{
 		grbl_command_count = 0;
 	}
+}
+
+// ---------- Subroutines -----------
+
+//
+// split a string on one or more delimiter
+// and return split at index
+// split(char* string[] = "1,2;3")
+//
+char* split(char* string, char* delimiter, int index)
+{
+	char* ptr;
+
+	char buffer[BUFFER_SIZE];
+	strcpy(buffer, string);
+
+	// init and create first cut
+	ptr = strtok(buffer, delimiter);
+	int x = 0;
+	while (ptr != NULL) {
+		if (x++ >= index)
+			break;
+		// next one
+		ptr = strtok(NULL, delimiter);
+	}
+
+	return ptr;
+}
+
+
+void set_grblState_from_chars(char* tmp)
+{
+	if (strcmp(tmp, "Idle") == 0)    grblState = GRBLStates::Idle;
+	if (strcmp(tmp, "Run") == 0)     grblState = GRBLStates::Run;
+	if (strcmp(tmp, "Hold") == 0)    grblState = GRBLStates::Hold;
+	if (strcmp(tmp, "Jog") == 0)     grblState = GRBLStates::Jog;
+	if (strcmp(tmp, "Alarm") == 0)   grblState = GRBLStates::Alarm;
+	if (strcmp(tmp, "Door") == 0)    grblState = GRBLStates::Door;
+	if (strcmp(tmp, "Check") == 0)   grblState = GRBLStates::Check;
+	if (strcmp(tmp, "Home") == 0)    grblState = GRBLStates::Home;
+	if (strcmp(tmp, "Sleep") == 0)   grblState = GRBLStates::Sleep;
 }
 
 float get_jog_step()

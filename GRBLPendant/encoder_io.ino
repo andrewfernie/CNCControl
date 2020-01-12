@@ -11,41 +11,83 @@
 //----------------------------------------------------------
 
 //--------------------------------------------------------------------------------------
-// ReadEncoder()
+// ReadUIEncoder()
 //--------------------------------------------------------------------------------------
-long ReadEncoder()
+long ReadUIEncoder()
 {
 
-#ifdef ENC_A
-	long newEncoder = encoder.read();
+#ifdef UI_ENC_A
+	long newEncoder = uiEncoder.read();
 
 	return newEncoder;
 #endif
 }
 
 //--------------------------------------------------------------------------------------
-// ResetEncoderCount()
+// ResetUIEncoderCount()
 //--------------------------------------------------------------------------------------
-void ResetEncoderCount()
+void ResetUIEncoderCount()
 {
-#ifdef ENC_A
-	encoder.write(0);
+#ifdef UI_ENC_A
+	uiEncoder.write(0);
 #endif
 }
 
 //--------------------------------------------------------------------------------------
-// ReadEncoderSwitch()
+// ReadUIEncoderSwitch(()
 //--------------------------------------------------------------------------------------
-bool ReadEncoderSwitch()
+bool ReadUIEncoderSwitch()
 {
-#ifdef ENC_S
+#ifdef UI_ENC_S
 	// Rotary Encoder Select
-	return !digitalRead(ENC_S);
+	return !digitalRead(UI_ENC_S);
 #endif
 }
 
-void ResetEncoderJog()
+void ResetUIEncoder()
 {
-	ResetEncoderCount();
+	ResetUIEncoderCount();
+}
+
+// ==============================
+
+//--------------------------------------------------------------------------------------
+// ReadJogEncoder()
+//--------------------------------------------------------------------------------------
+long ReadJogEncoder()
+{
+
+#ifdef JOG_ENC_A
+	long newEncoder = jogEncoder.read();
+
+	return newEncoder;
+#endif
+}
+
+//--------------------------------------------------------------------------------------
+// ResetJogEncoderCount()
+//--------------------------------------------------------------------------------------
+void ResetJogEncoderCount()
+{
+#ifdef JOG_ENC_A
+	jogEncoder.write(0);
+#endif
+}
+
+//--------------------------------------------------------------------------------------
+// ReadJogEncoderSwitch(()
+//--------------------------------------------------------------------------------------
+bool ReadJogEncoderSwitch()
+{
+#ifdef JOG_ENC_S
+	// Rotary Encoder Select
+	return !digitalRead(JOG_ENC_S);
+#endif
+}
+
+void ResetJogEncoder()
+{
+	ResetJogEncoderCount();
 	lastJogCommandPosition = 0.0;
 }
+

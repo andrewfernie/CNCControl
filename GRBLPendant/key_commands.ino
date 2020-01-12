@@ -20,7 +20,7 @@ void ProcessKey(char key)
 
 	case '2':
 		// Jog +
-		ResetEncoderJog();
+		ResetJogEncoder();
 		if (pendantMode == PendantModes::Control)
 		{
 			send_jog_command(+1.0 * get_jog_step());
@@ -29,7 +29,7 @@ void ProcessKey(char key)
 
 	case '3':
 		// Jog -
-		ResetEncoderJog();
+		ResetJogEncoder();
 		if (pendantMode == PendantModes::Control)
 		{
 			send_jog_command(-1.0 * get_jog_step());
@@ -39,7 +39,7 @@ void ProcessKey(char key)
 	case '4':
 
 		currentJogScaling = 3;
-		ResetEncoderJog();
+		ResetJogEncoder();
 		break;
 
 	case '5':
@@ -51,7 +51,7 @@ void ProcessKey(char key)
 		{
 			pendantMode = PendantModes::Control;
 		}
-		ResetEncoderJog();
+		ResetJogEncoder();
 		break;
 
 	case '6':
@@ -60,12 +60,12 @@ void ProcessKey(char key)
 
 	case '7':
 		currentJogAxis = CNCAxis::Z;
-		ResetEncoderJog();
+		ResetJogEncoder();
 		break;
 
 	case '8':
 		currentJogScaling = 2;
-		ResetEncoderJog();
+		ResetJogEncoder();
 		break;
 
 	case '9':
@@ -82,12 +82,12 @@ void ProcessKey(char key)
 
 	case 'A':
 		currentJogAxis = CNCAxis::Y;
-		ResetEncoderJog();
+		ResetJogEncoder();
 		break;
 
 	case 'B':
 		currentJogScaling = 1;
-		ResetEncoderJog();
+		ResetJogEncoder();
 		break;
 
 	case 'C':
@@ -105,12 +105,12 @@ void ProcessKey(char key)
 	case 'E':
 
 		currentJogAxis = CNCAxis::X;
-		ResetEncoderJog();
+		ResetJogEncoder();
 		break;
 
 	case 'F':
 		currentJogScaling = 0;
-		ResetEncoderJog();
+		ResetJogEncoder();
 		break;
 
 		//default:
