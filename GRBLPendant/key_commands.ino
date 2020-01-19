@@ -12,10 +12,18 @@
 
 void ProcessKey(char key)
 {
-	switch (key)
+	
+    switch (key)
 	{
 	case '1':
-
+		if (menuMode == MenuModes::Status)
+		{
+			menuMode = MenuModes::Menu;
+		}
+		else 
+		{
+			menuMode = MenuModes::Status;
+		}
 		break;
 
 	case '2':
@@ -37,7 +45,6 @@ void ProcessKey(char key)
 		break;
 
 	case '4':
-
 		currentJogScaling = 3;
 		ResetJogEncoder();
 		break;
@@ -55,7 +62,18 @@ void ProcessKey(char key)
 		break;
 
 	case '6':
-
+		if (grblCoord == GRBLCoord::MPos)
+		{
+			sendGRBLCommand("$10=0\n");     // Set to WPos
+		}
+		else if (grblCoord == GRBLCoord::WPos)
+		{
+			sendGRBLCommand("$10=1\n");     // Set to MPos
+		}
+		else
+		{
+			sendGRBLCommand("$10=1\n");     // Set to MPos
+		}
 		break;
 
 	case '7':

@@ -20,6 +20,8 @@
 #include <Key.h>
 #include <EEPROM.h>
 #include <Encoder.h>
+#include <Wire.h>                // I2C Communication
+#include <LiquidCrystal_I2C.h>   // LCD over I2C
 
 //
 // ===============================================
@@ -27,10 +29,7 @@
 // ===============================================
 //
 
-// MODE ------------------------------------------
-#define MODE_PROXY   // works as proxy between PC and GRBL
-//#define MODE_SPY   // works only as spy on the TX line 
-					 // (no buttons, no serial console, no interaction with grbl)
+#define VERSION         0.2
 
 // Normal serial for debug ----------------------------------
 #define debugSerial     Serial3
@@ -47,9 +46,8 @@
 const int BUFFER_SIZE = 100;
 
 // LCD -------------------------------------------
-#define LCD_ADDR		   0x27  // I2C LCD Address
-#define LCD2_ADDR		   0x23  // I2C LCD Address
-//#define LCD_4BIT
+#define STATUS_LCD_ADDR		   0x23  // I2C LCD Address
+#define JOG_LCD_ADDR		   0x27  // I2C LCD Address
 
 #define LCD_cols			20
 #define LCD_rows			4
@@ -60,14 +58,10 @@ const int BUFFER_SIZE = 100;
 #define LCD_EMPTY   ("                    ")
 #endif
 
-#if defined(LCD_4BIT)
-#define LCD_EN          12
-#define LCD_RW          11
-#define LCD_D4          4
-#define LCD_D5          5
-#define LCD_D6          6
-#define LCD_D7          7
-#elif defined(LCD_ADDR)
+// LCD controller pins
+// Note that as we are using an I2C controller these are the pins
+// on the controller, not the pins on the Teensy that is running this
+// code.
 #define LCD_EN          2
 #define LCD_RW          1
 #define LCD_RS          0
@@ -75,7 +69,6 @@ const int BUFFER_SIZE = 100;
 #define LCD_D5          5
 #define LCD_D6          6
 #define LCD_D7          7
-#endif
 
 
 // UI Rotary Encoder --------------------------------
@@ -84,19 +77,15 @@ const int BUFFER_SIZE = 100;
 #define UI_ENC_S				6     // Encoder select pin
 const int UI_ENC_COUNT = 80;  // encoder count per rotation
 
-#if defined(MODE_PROXY)
-   // Rotary Encoder --------------------------------
+// Rotary Encoder --------------------------------
 #define JOG_ENC_A				2     // Encoder interrupt pin
 #define JOG_ENC_B				3     // Encoder second pin
 //#define JOG_ENC_S				4     // Encoder select pin
-const int JOG_ENC_COUNT =	400;  // encoder count per rotation
+const int JOG_ENC_COUNT = 400;  // encoder count per rotation
 
 // EEPROM addresses
 #define EEPROM_BUTTONS		100
 #define EEPROM_INTERVAL		150
-#endif
-
-// ========================== END Defines ========
 
 // only for debugging
 #define DEBUG
@@ -111,18 +100,9 @@ const int JOG_ENC_COUNT =	400;  // encoder count per rotation
 #define DEBUG_PRINTLN(str)
 #endif
 
-#define VERSION         0.1
-
-// Makros
+// Macros
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
-// GRBL Serial connect pins ----------------------
-#define GRBL_RX			8
-#define GRBL_TX			9 
-
-enum class GRBLStates { Idle, Run, Hold, Jog, Alarm, Door, Check, Home, Sleep };
-// State set or get state from machine
-GRBLStates grblState = GRBLStates::Alarm;
 
 //
 // ===============================================
@@ -130,21 +110,13 @@ GRBLStates grblState = GRBLStates::Alarm;
 // ===============================================
 //
 
-
 // -------------------------
-// All inits for LCD control
+// Inits for LCD control
 // -------------------------
-#if defined(LCD_4BIT)
-#include <LiquidCrystal.h>   // LCD
-LiquidCrystal JogLCD(LCD_EN, LCD_RW, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
-#elif defined(LCD_ADDR)
-#include <Wire.h>                // I2C Communication
-#include <LiquidCrystal_I2C.h>   // LCD over I2C
 // Set the pins on the I2C chip used for LCD connections:
 //                         addr, en,rw,rs,d4,d5,d6,d7,bl,blpol
-LiquidCrystal_I2C StatusLCD(LCD_ADDR, LCD_EN, LCD_RW, LCD_RS, LCD_D4, LCD_D5, LCD_D6, LCD_D7, 3, POSITIVE);  // Set the LCD I2C address
-LiquidCrystal_I2C JogLCD(LCD2_ADDR, LCD_EN, LCD_RW, LCD_RS, LCD_D4, LCD_D5, LCD_D6, LCD_D7, 3, POSITIVE);  // Set the LCD I2C address
-#endif
+LiquidCrystal_I2C JogLCD(JOG_LCD_ADDR, LCD_EN, LCD_RW, LCD_RS, LCD_D4, LCD_D5, LCD_D6, LCD_D7, 3, POSITIVE);  // Set the LCD I2C address
+LiquidCrystal_I2C StatusLCD(STATUS_LCD_ADDR, LCD_EN, LCD_RW, LCD_RS, LCD_D4, LCD_D5, LCD_D6, LCD_D7, 3, POSITIVE);  // Set the LCD I2C address
 
 // -------------
 // RotaryEncoder
@@ -168,9 +140,6 @@ long jogEncoderPosition = -999;
 bool jogEncoderSwitch = false;
 #endif
 
-// LCD Menu
-// look in lcd_menu.ino for build menus
-// LCDMenu menu(&JogLCD, LCD_cols, LCD_rows);
 
 long lastStatusRXTime = 0;
 long lastStateRXTime = 0;
@@ -213,6 +182,12 @@ Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, rows, cols);
 // ------------
 enum class PendantModes { Monitor, Control };
 PendantModes pendantMode = PendantModes::Monitor;
+
+// ------------
+// Menu Mode
+// ------------
+enum class MenuModes { Menu, Status };
+MenuModes menuMode = MenuModes::Status;
 
 // --------------------------
 // CNC Controller Status Data 
@@ -269,6 +244,14 @@ SpindleState currentSpindleState = SpindleState::Undefined;
 enum class CoolantState { Undefined, Mist, Flood, Off };
 CoolantState currentCoolantState = CoolantState::Undefined;
 
+// GRBL controller states
+enum class GRBLStates { Idle, Run, Hold, Jog, Alarm, Door, Check, Home, Sleep };
+GRBLStates grblState = GRBLStates::Alarm;
+
+// Co-ordinate system
+enum class GRBLCoord { Undefined, MPos, WPos };
+GRBLCoord grblCoord = GRBLCoord::Undefined;
+
 // Tool
 char currentTool[] = "   ";
 
@@ -287,7 +270,6 @@ struct AxisData
 	float z;
 };
 AxisData currentPosition;
-char     positionCoordSystem[10];
 
 float currentSpindleSpeed;
 float currentOvSpindleSpeedPercent; //Override Percent
@@ -319,8 +301,6 @@ float lastJogCommandPosition;
 // ===============================================
  //
 
-
-
  //  ---------- Setup  ----------- //
 
 void setup()
@@ -328,7 +308,7 @@ void setup()
 	debugSerial.begin(DEBUG_SERIAL);   // open serial for debug/status messages
 
 #ifdef UI_ENC_S
-// set Select pin from Rotary Encoder to input
+	// set Select pin from Rotary Encoder to input
 	pinMode(UI_ENC_S, INPUT);      // sets the encoder select digital pin
 #endif
 
@@ -339,8 +319,8 @@ void setup()
 
    // init LCD Displays //
 
-	JogLCD.begin(LCD_cols, LCD_rows);
 	StatusLCD.begin(LCD_cols, LCD_rows);
+	JogLCD.begin(LCD_cols, LCD_rows);
 
 	// This is the serial connect to PC, we get some commands
 	// but we can also print some additional information about this module
@@ -352,21 +332,21 @@ void setup()
 	debugSerial.println(F("<Call help with ':?'>"));
 
 
+	StatusLCD.setCursor(0, 0); // letter, row
+	StatusLCD.print(F("GRBL Pendant "));
+	StatusLCD.print(VERSION);
+	StatusLCD.setCursor(0, 1); // letter, row
+	StatusLCD.print(F("Connect ... "));
+	StatusLCD.setCursor(0, 2); // letter, row
+	StatusLCD.print(F("Status LCD "));
+
 	JogLCD.setCursor(0, 0); // letter, row
 	JogLCD.print(F("GRBL Pendant "));
 	JogLCD.print(VERSION);
 	JogLCD.setCursor(0, 1); // letter, row
 	JogLCD.print(F("Connect ... "));
 	JogLCD.setCursor(0, 2); // letter, row
-	JogLCD.print(F("LCD #1 "));
-
-	StatusLCD.setCursor(0, 0); // letter, row
-	StatusLCD.print(F("GRBL Pendant "));
-	StatusLCD.print(VERSION);
-	StatusLCD.setCursor(0, 1); // letter, row
-	StatusLCD.print(F("Connect ... "));	
-	StatusLCD.setCursor(0, 2); // letter, row
-	StatusLCD.print(F("LCD #2 "));
+	JogLCD.print(F("Jog LCD "));
 
 	delay(2000);
 
@@ -379,8 +359,8 @@ void setup()
 	grblSerial.write(0x18);
 
 
-	JogLCD.clear();
 	StatusLCD.clear();
+	JogLCD.clear();
 
 }//SETUP
 
@@ -452,7 +432,7 @@ void fast_loop()
 
 	uiEncoderPosition = ReadUIEncoder();
 
-	
+
 #ifdef UI_ENC_S
 	uiEncoderSwitch = ReadUIEncoderSwitch();
 
@@ -486,7 +466,7 @@ void fast_loop()
 			}
 		}
 
-		
+
 	}
 }
 
@@ -600,12 +580,6 @@ void slow_loop()
 
 void one_second_loop()
 {
-	//char tmpStr[80];
-
-	//sprintf(tmpStr, "Current Position: %f, %f, %f\n", currentPosition.x, currentPosition.y, currentPosition.z);
-	//debugSerial.print(tmpStr);
-
-
 	if (pendantMode == PendantModes::Control)
 	{
 		if (grblState == GRBLStates::Idle)

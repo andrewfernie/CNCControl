@@ -13,14 +13,14 @@
 
 void display_state()
 {
-	
-// Display on LCD ...
-// lcd screen
-// |------------------|
-// State  WPos  
-// 
-// S1 T1          F1000
-// MM LIN XY M1
+
+	// Display on LCD ...
+	// lcd screen
+	// |------------------|
+	// State  WPos  
+	// 
+	// S1 T1          F1000
+	// MM LIN XY M1
 
 
 	char tmpStr[LCD_cols];
@@ -40,7 +40,7 @@ void display_state()
 		break;
 
 	case GRBLStates::Hold:
-		strcpy(tmpStr, "Hold "); 
+		strcpy(tmpStr, "Hold ");
 		break;
 
 	case GRBLStates::Jog:
@@ -71,111 +71,106 @@ void display_state()
 		strcpy(tmpStr, "-----");
 		break;
 	}
-	JogLCD.setCursor(0, 0); // letter, row
-	JogLCD.print(tmpStr);
+	StatusLCD.setCursor(0, 0); // letter, row
+	StatusLCD.print(tmpStr);
 
 	// ----------
 	// Second Row
-	JogLCD.setCursor(0, 1); // letter, row
-	JogLCD.print(LCD_EMPTY);
-	JogLCD.setCursor(0, 1); // letter, row
-	JogLCD.print(lastMessage);
+	StatusLCD.setCursor(0, 1); // letter, row
+	StatusLCD.print(LCD_EMPTY);
+	StatusLCD.setCursor(0, 1); // letter, row
+	StatusLCD.print(lastMessage);
 
 	// ---------
 	// Third Row
-	JogLCD.setCursor(0, 2); //third row
+	StatusLCD.setCursor(0, 2); //third row
 
 	switch (currentMotionMode)
 	{
 	case MotionMode::Rapid:
-		JogLCD.print("RAP ");
+		StatusLCD.print("RAP ");
 		break;
 	case MotionMode::Linear:
-		JogLCD.print("LIN ");
+		StatusLCD.print("LIN ");
 		break;
 	case MotionMode::CW:
-		JogLCD.print("CW  ");
+		StatusLCD.print("CW  ");
 		break;
 	case MotionMode::CCW:
-		JogLCD.print("CCW ");
+		StatusLCD.print("CCW ");
 		break;
 	case MotionMode::Probe_2:
-		JogLCD.print("PRB2");
+		StatusLCD.print("PRB2");
 		break;
 	case MotionMode::Probe_3:
-		JogLCD.print("PRB3");
+		StatusLCD.print("PRB3");
 		break;
 	case MotionMode::Probe_4:
-		JogLCD.print("PRB4");
+		StatusLCD.print("PRB4");
 		break;
 	case MotionMode::Probe_5:
-		JogLCD.print("PRB5");
+		StatusLCD.print("PRB5");
 		break;
 	default:
-		JogLCD.print("--- ");
+		StatusLCD.print("--- ");
 	}
 
-	// Coordinates ..
-	JogLCD.setCursor(7, 2); // letter, row
-	sprintf(tmpStr, "%4s", positionCoordSystem);
-	JogLCD.print(tmpStr);
-
-
+		
 	// Feed
 	sprintf(tmpStr, "%4.0f", currentFeedRate);
-	JogLCD.setCursor((LCD_cols - strlen(tmpStr) - 4), 2);
-	JogLCD.print(strcat(tmpStr, "mm/s"));
-	
+	StatusLCD.setCursor((LCD_cols - strlen(tmpStr) - 4), 2);
+	StatusLCD.print(strcat(tmpStr, "mm/s"));
+
 	// ---------
-    // Fourth Row
-	
-	JogLCD.setCursor(0, 3);
+	// Fourth Row
+
+	StatusLCD.setCursor(0, 3);
 
 
 	// Plane
 	switch (currentPlaneSelect)
 	{
 	case PlaneSelect::XY:
-		JogLCD.print("XY");
+		StatusLCD.print("XY");
 		break;
 	case PlaneSelect::ZX:
-		JogLCD.print("ZX");
+		StatusLCD.print("ZX");
 		break;
 	case PlaneSelect::YZ:
-		JogLCD.print("YZ");
+		StatusLCD.print("YZ");
 		break;
 	default:
-		JogLCD.print("--");
+		StatusLCD.print("--");
 	}
 
-	JogLCD.print(" ");
+	StatusLCD.print(" ");
 
 	// Tool
 	sprintf(tmpStr, "%3.3s", currentTool);
-	JogLCD.print(tmpStr);
-	JogLCD.print(" ");
+	StatusLCD.print(tmpStr);
+	StatusLCD.print(" ");
 
 	// Program Mode
 	switch (currentProgramMode)
 	{
 	case ProgramMode::Stop:
-		strcpy(tmpStr,"Pause");
+		strcpy(tmpStr, "Pause");
 		break;
 	case ProgramMode::Optional:
-		strcpy(tmpStr,"Pause");
+		strcpy(tmpStr, "Pause");
 		break;
 	case ProgramMode::End:
-		strcpy(tmpStr,"End  ");
+		strcpy(tmpStr, "End  ");
 		break;
 	case ProgramMode::Rewind:
-		strcpy(tmpStr,"Rwnd ");
+		strcpy(tmpStr, "Rwnd ");
 		break;
 	default:
-		strcpy(tmpStr,"-----");
+		strcpy(tmpStr, "-----");
 	}
 
-    JogLCD.setCursor((LCD_cols - strlen(tmpStr)), 3);
-    JogLCD.print(tmpStr);
+	StatusLCD.setCursor((LCD_cols - strlen(tmpStr)), 3);
+	StatusLCD.print(tmpStr);
 }
 
 
@@ -197,56 +192,64 @@ void display_jogscreen()
 	// ---------
 	// First Row
 
-	
-
 	// Pendant Mode
-	StatusLCD.setCursor(0, 0);
+	JogLCD.setCursor(0, 0);
 	switch (pendantMode)
 	{
 	case PendantModes::Monitor:
-		StatusLCD.print("Mntr");
+		JogLCD.print("Mntr");
 		break;
 	case PendantModes::Control:
-		StatusLCD.print("Ctrl");
+		JogLCD.print("Ctrl");
 		break;
 	default:
-		StatusLCD.print("----");
+		JogLCD.print("----");
 	}
 
 	// Units
-	StatusLCD.setCursor(10, 0);
+	JogLCD.setCursor(10, 0);
 	switch (currentUnitsMode)
 	{
 	case UnitsMode::Inches:
-		StatusLCD.print("in");
+		JogLCD.print("in");
 		break;
 	case UnitsMode::mm:
-		StatusLCD.print("mm");
+		JogLCD.print("mm");
 		break;
 	default:
-		StatusLCD.print("--");
+		JogLCD.print("--");
 	}
 
 	// Coordinate system
-	sprintf(tmpStr, "%4s", positionCoordSystem);
-	len = strlen(tmpStr);
-	StatusLCD.setCursor((LCD_cols - len), 0);
-	StatusLCD.print(tmpStr);
-	
+	JogLCD.setCursor((LCD_cols - 4), 0); 
+	switch (grblCoord)
+	{
+	case GRBLCoord::MPos:
+		JogLCD.print("MPos");
+		break;
+
+	case GRBLCoord::WPos:
+		JogLCD.print("WPos");
+		break;
+
+	default:
+		JogLCD.print("----");
+	}
+
 	// ---------
 	// Second Row
 
 	// X position
 	sprintf(tmpStr, "X%8.2f", currentPosition.x);
 	len = strlen(tmpStr);
-	StatusLCD.setCursor(0, 1);
-	StatusLCD.print(tmpStr);
+	JogLCD.setCursor(0, 1);
+	JogLCD.print(tmpStr);
 
 	// Y position
 	sprintf(tmpStr, "Y%8.2f", currentPosition.y);
 	len = strlen(tmpStr);
-	StatusLCD.setCursor((LCD_cols - len), 1);
-	StatusLCD.print(tmpStr);
+	JogLCD.setCursor((LCD_cols - len), 1);
+	JogLCD.print(tmpStr);
 
 
 	// ---------
@@ -255,45 +258,42 @@ void display_jogscreen()
 	// Z position
 	sprintf(tmpStr, "Z%8.2f", currentPosition.z);
 	len = strlen(tmpStr);
-	StatusLCD.setCursor(0, 2);
-	StatusLCD.print(tmpStr);
+	JogLCD.setCursor(0, 2);
+	JogLCD.print(tmpStr);
 
 	// ---------
 	// Fourth Row
 
-	StatusLCD.setCursor(0, 3);
+	JogLCD.setCursor(0, 3);
 
 
 	// Jog Axis
 	switch (currentJogAxis)
 	{
 	case CNCAxis::X:
-		StatusLCD.print("Jog: X");
+		JogLCD.print("Jog: X");
 		break;
 	case CNCAxis::Y:
-		StatusLCD.print("Jog: Y");
+		JogLCD.print("Jog: Y");
 		break;
 	case CNCAxis::Z:
-		StatusLCD.print("Jog: Z");
+		JogLCD.print("Jog: Z");
 		break;
 	default:
-		StatusLCD.print("-");
+		JogLCD.print("-");
 	}
 
 	// Jog Step
 	sprintf(tmpStr, "%5.1f", jogScalings[currentJogScaling]);
 	len = strlen(tmpStr);
 
-	StatusLCD.setCursor(7, 3);
-	StatusLCD.print(tmpStr);
-	
+	JogLCD.setCursor(7, 3);
+	JogLCD.print(tmpStr);
 
 	// Jog Rate
 	sprintf(tmpStr, "%6.1f", jogRates[currentJogRate]);
 	len = strlen(tmpStr);
-	StatusLCD.setCursor((LCD_cols - len), 3);
-	StatusLCD.print(tmpStr);
+	JogLCD.setCursor((LCD_cols - len), 3);
+	JogLCD.print(tmpStr);
 
-	
-	
 }

@@ -225,7 +225,19 @@ void parse_status_line(char* line_in)
 
 	// Coordinates ..
 	temp = strtok(NULL, delim);
-	strncpy(positionCoordSystem, temp, sizeof(positionCoordSystem) - 1);
+
+	if (strcmp(temp, "MPos") == 0)
+	{
+		grblCoord = GRBLCoord::MPos;
+	}
+	else if (strcmp(temp, "WPos") == 0)
+	{
+		grblCoord = GRBLCoord::WPos;
+	}
+	else
+	{
+		grblCoord = GRBLCoord::Undefined;
+	}
 
 
 	// X Machine position ...
