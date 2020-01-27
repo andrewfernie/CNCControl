@@ -19,6 +19,7 @@ void ProcessKey(char key)
 		if (menuMode == MenuModes::Status)
 		{
 			menuMode = MenuModes::Menu;
+			ResetUIEncoder();
 		}
 		else 
 		{

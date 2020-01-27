@@ -22,6 +22,8 @@
 #include <Encoder.h>
 #include <Wire.h>                // I2C Communication
 #include <LiquidCrystal_I2C.h>   // LCD over I2C
+#include "config.h"
+#include "menu.h"
 
 //
 // ===============================================
@@ -31,77 +33,6 @@
 
 #define VERSION         0.2
 
-// Normal serial for debug ----------------------------------
-#define debugSerial     Serial3
-#define DEBUG_SERIAL    115200  
-
-// Serial to GRBL
-#define grblSerial      Serial2
-#define GRBL_SERIAL     115200 
-
-// G-Code sender. Must be as fast as grbl!
-#define gsSerial        Serial
-#define GS_SERIAL       115200 
-
-const int BUFFER_SIZE = 100;
-
-// LCD -------------------------------------------
-#define STATUS_LCD_ADDR		   0x23  // I2C LCD Address
-#define JOG_LCD_ADDR		   0x27  // I2C LCD Address
-
-#define LCD_cols			20
-#define LCD_rows			4
-
-#if(LCD_cols==16)
-#define LCD_EMPTY   ("                ")
-#else
-#define LCD_EMPTY   ("                    ")
-#endif
-
-// LCD controller pins
-// Note that as we are using an I2C controller these are the pins
-// on the controller, not the pins on the Teensy that is running this
-// code.
-#define LCD_EN          2
-#define LCD_RW          1
-#define LCD_RS          0
-#define LCD_D4          4
-#define LCD_D5          5
-#define LCD_D6          6
-#define LCD_D7          7
-
-
-// UI Rotary Encoder --------------------------------
-#define UI_ENC_A				4     // Encoder interrupt pin
-#define UI_ENC_B				5     // Encoder second pin
-#define UI_ENC_S				6     // Encoder select pin
-const int UI_ENC_COUNT = 80;  // encoder count per rotation
-
-// Rotary Encoder --------------------------------
-#define JOG_ENC_A				2     // Encoder interrupt pin
-#define JOG_ENC_B				3     // Encoder second pin
-//#define JOG_ENC_S				4     // Encoder select pin
-const int JOG_ENC_COUNT = 400;  // encoder count per rotation
-
-// EEPROM addresses
-#define EEPROM_BUTTONS		100
-#define EEPROM_INTERVAL		150
-
-// only for debugging
-#define DEBUG
-
-#define DEBUG_IO
-
-#ifdef DEBUG_IO
-#define DEBUG_PRINT(str) debugSerial.print(str)
-#define DEBUG_PRINTLN(str) debugSerial.println(str)
-#else
-#define DEBUG_PRINT(str)
-#define DEBUG_PRINTLN(str)
-#endif
-
-// Macros
-#define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
 
 //
@@ -294,6 +225,32 @@ uint8_t currentJogRate = 2;
 int grbl_command_count = 0;
 int grbl_last_command_count = 0;
 float lastJogCommandPosition;
+
+// --------------
+// Menu 
+// --------------
+
+uint8_t menuVarUnits;
+float   menuJogSpeedXY = 1.0;
+float   menuJogSpeedZ = 1.0;
+
+float menuVarDummy1;
+int menuVarDummy2;
+uint8_t menuVarDummy3;
+uint8_t menuVarDummy4;
+
+struct MenuParameterItem menuParameters[] = {
+	{ParamInMm,  "Units      ",  0,     0.,     0., (void*)&menuVarUnits},
+	{ParamFloat, "Jog Spd. XY",  0,     0.,   100., (void*)&menuJogSpeedXY},
+	{ParamFloat, "Jog Spd. Z ",  0,     0.,   100., (void*)&menuJogSpeedZ},
+	{ParamFloat, "Dummy 1    ",  2,   -20.,   100., (void*)&menuVarDummy1},
+	{ParamInt,   "Dummy 2    ",  0,  -999.,  1000., (void*)&menuVarDummy2},
+	{ParamOnOff, "Dummy 3    ",  0,     0.,     0., (void*)&menuVarDummy3},
+	{ParamYesNo, "Dummy 4    ",  0,     0.,     0., (void*)&menuVarDummy4}
+};
+
+Menu menuObject(menuParameters, &StatusLCD, &uiEncoderPosition);
+
 
 //
 // ===============================================
@@ -533,7 +490,10 @@ void slow_loop()
 		delta_ms_slow_loop = millis() - slow_loopTimer;
 		slow_loopTimer = millis();
 
-		display_state();
+		if (menuMode == MenuModes::Status)
+			display_state();
+		else
+			menuObject.Draw();
 
 		break;
 
@@ -683,7 +643,7 @@ uint32_t freeMem()
 	uint32_t heapTop;
 
 	// current position of the stack.
-	stackTop = (uint32_t)& stackTop;
+	stackTop = (uint32_t)&stackTop;
 
 	// current position of heap.
 	void* hTop = malloc(1);

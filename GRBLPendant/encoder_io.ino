@@ -19,7 +19,7 @@ long ReadUIEncoder()
 #ifdef UI_ENC_A
 	long newEncoder = uiEncoder.read();
 
-	return newEncoder;
+	return -newEncoder;
 #endif
 }
 
