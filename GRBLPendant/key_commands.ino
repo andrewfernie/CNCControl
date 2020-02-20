@@ -95,7 +95,16 @@ void ProcessKey(char key)
 	case '0':
 		if (pendantMode == PendantModes::Control)
 		{
-			spindle_on(100);
+			if (currentSpindleState == SpindleState::Off)
+			{
+				spindle_on(100);
+			}
+			else
+			{
+				spindle_off();
+			}
+
+			break;
 		}
 		break;
 
@@ -117,7 +126,7 @@ void ProcessKey(char key)
 	case 'D':
 		if (pendantMode == PendantModes::Control)
 		{
-			spindle_off();
+			sendGRBLCommand("\x18\n");	// GRBL Soft reset (ctrl-x)
 		}
 		break;
 

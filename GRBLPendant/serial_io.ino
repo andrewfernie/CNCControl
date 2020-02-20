@@ -10,7 +10,6 @@
 // This code started from the XLCD project by Frank Herrmann
 //----------------------------------------------------------
 
-
 // Get data from GRBL ==> PC
 void serial_io_grbl()
 {
@@ -135,6 +134,22 @@ void parseGrblLine(char* line_in)
 		gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
 		gsSerial.print("\n");
 	}
+	else if (strncmp(line, "[MSG:", 5) == 0)
+	{
+		if (pendantMode != PendantModes::Control)
+		{
+			gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
+			gsSerial.print("\n");
+		}
+		for (int i = 0; i <= 20; i++)
+			lastMessage[i] = '\0';
+
+		strncpy(lastMessage, line_in, 20);
+		lastMessage[20] = '\0';
+		lastMessageTime = millis();
+
+		DEBUG_PRINTLN(line_in);
+	}
 	else if (line[0] == '[')
 	{
 		parse_state_line(line);
@@ -144,6 +159,7 @@ void parseGrblLine(char* line_in)
 			gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
 			gsSerial.print("\n");
 		}
+		DEBUG_PRINTLN(line_in);
 	}
 	else if (strncmp(line, "ok", 2) == 0)
 	{
@@ -156,9 +172,6 @@ void parseGrblLine(char* line_in)
 			gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
 			gsSerial.print("\n");
 		}
-		//strcpy(lastMessage, LCD_EMPTY);
-		//lastMessage[sizeof(lastMessage) - 1] = '/0';
-		//strncpy(lastMessage, line_in, sizeof(lastMessage) - 1);
 	}
 	else if (strncmp(line, "error", 5) == 0)
 	{
@@ -167,9 +180,25 @@ void parseGrblLine(char* line_in)
 			gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
 			gsSerial.print("\n");
 		}
-		strcpy(lastMessage, LCD_EMPTY);
-		lastMessage[sizeof(lastMessage)-1] = 0;
-		strncpy(lastMessage, line_in, sizeof(lastMessage) - 1);
+		DEBUG_PRINTLN(line_in);
+		
+		char errCode[3] = { 0,0,0 };
+		errCode[0] = line[6];
+		if(line[7] >= '0' && line[7]<='9')
+			errCode[1] = line[7];
+
+		error_number = atoi(errCode);
+
+		if (error_number < error_num_min)
+		{
+			error_number = 0;
+		}
+		else if (error_number > error_num_max)
+		{
+			error_number = 0;
+		}
+		lastErrorTime = millis();
+
 	}
 	else if (strncmp(line, "ALARM", 5) == 0)
 	{
@@ -178,9 +207,20 @@ void parseGrblLine(char* line_in)
 			gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
 			gsSerial.print("\n");
 		}
-		strcpy(lastMessage, LCD_EMPTY);
-		lastMessage[sizeof(lastMessage) - 1] = 0;
-		strncpy(lastMessage, line_in, sizeof(lastMessage) - 1);
+
+		lastAlarmTime = millis();
+
+		//DEBUG_PRINTLN(line_in);
+
+		alarm_number = line[6] - '0';
+		if (alarm_number < alarm_num_min)
+		{
+			alarm_number = 0;
+		}
+		else if (alarm_number > alarm_num_max)
+		{
+			alarm_number = 0;
+		}
 	}
 	else
 	{

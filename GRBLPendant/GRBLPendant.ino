@@ -24,6 +24,7 @@
 #include <LiquidCrystal_I2C.h>   // LCD over I2C
 #include "config.h"
 #include "menu.h"
+#include "lcd_screens.h"
 
 //
 // ===============================================
@@ -31,7 +32,7 @@
 // ===============================================
 //
 
-#define VERSION         0.2
+#define VERSION         0.21
 
 
 
@@ -189,10 +190,16 @@ char currentTool[] = "   ";
 // Feed rate
 float currentFeedRate;
 
+
 float currentOvFeedRatePercent;  //Override Percent
 float currentOvRapidRatePercent;  //Override Percent
 
-char lastMessage[LCD_cols];
+char lastMessage[BUFFER_SIZE];
+unsigned long lastMessageTime=0;
+int  alarm_number = 0;			// Alarm message number
+unsigned long lastAlarmTime = 0;
+int  error_number = 0;			// Error message number
+unsigned long lastErrorTime = 0;
 
 struct AxisData
 {
@@ -526,12 +533,12 @@ void slow_loop()
 	case 4:
 		slow_loopCounter = 0;
 
-		DEBUG_PRINTLN(ReadUIEncoder());
+//		DEBUG_PRINTLN(ReadUIEncoder());
 
-		if (ReadUIEncoderSwitch())
-			DEBUG_PRINTLN("TRUE");
-		else
-			DEBUG_PRINTLN("FALSE");
+//      if (ReadUIEncoderSwitch())
+//	       DEBUG_PRINTLN("TRUE");
+//      else
+//	       DEBUG_PRINTLN("FALSE");
 
 
 		break;

@@ -36,6 +36,9 @@
     <ClInclude Include="config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lcd_screens.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LCDMenu.cpp">

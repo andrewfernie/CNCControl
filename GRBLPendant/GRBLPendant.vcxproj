@@ -125,6 +125,7 @@
     <ClInclude Include="LCDMenu.h">
       <FileType>CppCode</FileType>
     </ClInclude>
+    <ClInclude Include="lcd_screens.h" />
     <ClInclude Include="menu.h" />
     <ClInclude Include="__vm\.GRBLPendant.vsarduino.h" />
   </ItemGroup>

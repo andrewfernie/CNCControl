@@ -10,7 +10,6 @@
 // This code started from the XLCD project by Frank Herrmann
 //----------------------------------------------------------
 
-
 void display_state()
 {
 
@@ -79,7 +78,31 @@ void display_state()
 	StatusLCD.setCursor(0, 1); // letter, row
 	StatusLCD.print(LCD_EMPTY);
 	StatusLCD.setCursor(0, 1); // letter, row
-	StatusLCD.print(lastMessage);
+	if (grblState == GRBLStates::Alarm)
+	{
+		StatusLCD.print("Alm:");
+		StatusLCD.print(alarm_message[alarm_number]);
+	}
+	else
+	{
+		if (millis() - lastErrorTime < 5000)
+			StatusLCD.print(error_message[error_number]);
+		else
+			StatusLCD.print(lastMessage);
+	}
+
+	// erase message if more than 5s old
+	if (millis() - lastMessageTime > 5000)
+	{
+		for (int i = 0; i <= 20; i++)
+			lastMessage[i] = '\0';
+	}
+
+	// erase message if more than 5s old
+	if (millis() - lastErrorTime > 5000)
+	{
+		error_number = 0;
+	}
 
 	// ---------
 	// Third Row
@@ -115,7 +138,7 @@ void display_state()
 		StatusLCD.print("--- ");
 	}
 
-		
+
 	// Feed
 	sprintf(tmpStr, "%4.0f", currentFeedRate);
 	StatusLCD.setCursor((LCD_cols - strlen(tmpStr) - 4), 2);
@@ -221,7 +244,7 @@ void display_jogscreen()
 	}
 
 	// Coordinate system
-	JogLCD.setCursor((LCD_cols - 4), 0); 
+	JogLCD.setCursor((LCD_cols - 4), 0);
 	switch (grblCoord)
 	{
 	case GRBLCoord::MPos:
