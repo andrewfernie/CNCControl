@@ -16,6 +16,8 @@
 // ===============================================
 //
 
+
+#include <Bounce2.h>
 #include <Keypad.h>
 #include <Key.h>
 #include <EEPROM.h>
@@ -31,10 +33,7 @@
 // Defines
 // ===============================================
 //
-
-#define VERSION         0.21
-
-
+constexpr auto ProgramVersion = 0.22;
 
 //
 // ===============================================
@@ -47,8 +46,8 @@
 // -------------------------
 // Set the pins on the I2C chip used for LCD connections:
 //                         addr, en,rw,rs,d4,d5,d6,d7,bl,blpol
-LiquidCrystal_I2C JogLCD(JOG_LCD_ADDR, LCD_EN, LCD_RW, LCD_RS, LCD_D4, LCD_D5, LCD_D6, LCD_D7, 3, POSITIVE);  // Set the LCD I2C address
-LiquidCrystal_I2C StatusLCD(STATUS_LCD_ADDR, LCD_EN, LCD_RW, LCD_RS, LCD_D4, LCD_D5, LCD_D6, LCD_D7, 3, POSITIVE);  // Set the LCD I2C address
+LiquidCrystal_I2C JogLCD(JogLCDAddress, LCD_EN, LCD_RW, LCD_RS, LCD_D4, LCD_D5, LCD_D6, LCD_D7, 3, POSITIVE);  // Set the LCD I2C address
+LiquidCrystal_I2C StatusLCD(StatusLCDAddress, LCD_EN, LCD_RW, LCD_RS, LCD_D4, LCD_D5, LCD_D6, LCD_D7, 3, POSITIVE);  // Set the LCD I2C address
 
 // -------------
 // RotaryEncoder
@@ -66,6 +65,8 @@ bool uiEncoderSwitch = false;
 #ifdef JOG_ENC_A
 Encoder jogEncoder(JOG_ENC_A, JOG_ENC_B);
 long jogEncoderPosition = -999;
+Bounce jogResetButton = Bounce();
+long   lastJogEncoderPosition = 0;
 #endif
 
 #ifdef JOG_ENC_S
@@ -75,6 +76,7 @@ bool jogEncoderSwitch = false;
 
 long lastStatusRXTime = 0;
 long lastStateRXTime = 0;
+
 
 // --------------
 // System Timers
@@ -194,7 +196,7 @@ float currentFeedRate;
 float currentOvFeedRatePercent;  //Override Percent
 float currentOvRapidRatePercent;  //Override Percent
 
-char lastMessage[BUFFER_SIZE];
+char lastMessage[BufferSize];
 unsigned long lastMessageTime=0;
 int  alarm_number = 0;			// Alarm message number
 unsigned long lastAlarmTime = 0;
@@ -269,7 +271,7 @@ Menu menuObject(menuParameters, &StatusLCD, &uiEncoderPosition);
 
 void setup()
 {
-	debugSerial.begin(DEBUG_SERIAL);   // open serial for debug/status messages
+	debugSerial.begin(DebugSerialSpeed);   // open serial for debug/status messages
 
 #ifdef UI_ENC_S
 	// set Select pin from Rotary Encoder to input
@@ -281,16 +283,22 @@ void setup()
 	pinMode(JOG_ENC_S, INPUT);      // sets the encoder select digital pin
 #endif
 
+	  // Setup the first button with an internal pull-up :
+	pinMode(JogResetPin, INPUT_PULLUP);
+	// After setting up the button, setup the Bounce instance :
+	jogResetButton.attach(JogResetPin);
+	jogResetButton.interval(5); // interval in ms
+
    // init LCD Displays //
 
-	StatusLCD.begin(LCD_cols, LCD_rows);
-	JogLCD.begin(LCD_cols, LCD_rows);
+	StatusLCD.begin(LCDCols, LCDRows);
+	JogLCD.begin(LCDCols, LCDRows);
 
 	// This is the serial connect to PC, we get some commands
 	// but we can also print some additional information about this module
 	// and the parser from Client program will ignore this
 	debugSerial.print(F("<GRBLPendant "));
-	debugSerial.print(VERSION);
+	debugSerial.print(ProgramVersion);
 	debugSerial.println(F(">"));
 	debugSerial.println(F("<All commands start with a colon ':'>"));
 	debugSerial.println(F("<Call help with ':?'>"));
@@ -298,7 +306,7 @@ void setup()
 
 	StatusLCD.setCursor(0, 0); // letter, row
 	StatusLCD.print(F("GRBL Pendant "));
-	StatusLCD.print(VERSION);
+	StatusLCD.print(ProgramVersion);
 	StatusLCD.setCursor(0, 1); // letter, row
 	StatusLCD.print(F("Connect ... "));
 	StatusLCD.setCursor(0, 2); // letter, row
@@ -306,7 +314,7 @@ void setup()
 
 	JogLCD.setCursor(0, 0); // letter, row
 	JogLCD.print(F("GRBL Pendant "));
-	JogLCD.print(VERSION);
+	JogLCD.print(ProgramVersion);
 	JogLCD.setCursor(0, 1); // letter, row
 	JogLCD.print(F("Connect ... "));
 	JogLCD.setCursor(0, 2); // letter, row
@@ -315,10 +323,10 @@ void setup()
 	delay(2000);
 
 	// open serial port to G Code senser 
-	gsSerial.begin(GS_SERIAL);
+	gsSerial.begin(GSSerialSpeed);
 
 	// open serial port to GRBL
-	grblSerial.begin(GRBL_SERIAL);
+	grblSerial.begin(GRBLSerialSpeed);
 	// reset grbl device (ctrl-X) for Universal Gcode Sender
 	grblSerial.write(0x18);
 
@@ -336,9 +344,9 @@ int gr = 0;
 int pc_chars = 0;
 int gr_chars = 0;
 int loopCount = 0;
-char pcserial[BUFFER_SIZE];
-char grserial[BUFFER_SIZE];
-char lcdRowString[LCD_cols];
+char pcserial[BufferSize];
+char grserial[BufferSize];
+char lcdRowString[LCDCols];
 uint32_t  lastLCDOut = 0;
 
 
@@ -355,6 +363,9 @@ void loop()
 		//DEBUG_PRINTLN(grbl_command_count);
 		grbl_last_command_count = grbl_command_count;
 	}
+
+	// Update the Bounce instance
+	jogResetButton.update();
 
 	// We want this to execute at 50Hz if possible
 	// -------------------------------------------
@@ -405,7 +416,16 @@ void fast_loop()
 	}
 #endif
 
-	jogEncoderPosition = ReadJogEncoder();
+	if (!ReadJogResetButton())
+	{
+		jogEncoderPosition = ReadJogEncoder();
+	}
+	else
+	{
+		ResetJogEncoder();
+		jogEncoderPosition = 0;
+	}
+
 
 #ifdef JOG_ENC_S
 	jogEncoderSwitch = ReadJogEncoderSwitch();
@@ -413,13 +433,12 @@ void fast_loop()
 	if (jogEncoderSwitch)
 	{
 		ResetJogEncoderCount();
-		lastJogCommandPosition = 0.0;
 	}
 #endif
 
 	if (pendantMode == PendantModes::Control)
 	{
-		float jog_move = float(jogEncoderPosition) / JOG_ENC_COUNT * get_jog_scaling();
+		float jog_move = float(jogEncoderPosition) / JogEncCount * get_jog_scaling();
 		if (fabs(jog_move - lastJogCommandPosition) >= 0.001)
 		{
 			if (grbl_command_count < 5)
@@ -578,7 +597,7 @@ char* split(char* string, char* delimiter, int index)
 {
 	char* ptr;
 
-	char buffer[BUFFER_SIZE];
+	char buffer[BufferSize];
 	strcpy(buffer, string);
 
 	// init and create first cut

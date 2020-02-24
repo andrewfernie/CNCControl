@@ -29,7 +29,7 @@ void serial_io_grbl()
 			grserial[0] = '\0';
 		}
 		else {
-			if (gr < BUFFER_SIZE)
+			if (gr < BufferSize)
 				grserial[gr++] = c;
 		}
 	}
@@ -75,7 +75,7 @@ void serial_io_gs()
 		}
 		else 
 		{
-			if (pc < BUFFER_SIZE) {
+			if (pc < BufferSize) {
 				pcserial[pc++] = c;
 			}
 		}
@@ -121,7 +121,7 @@ void parsePCCommand(char* line)
 // Analyze every line and choose an action
 void parseGrblLine(char* line_in)
 {
-	char line[BUFFER_SIZE];
+	char line[BufferSize];
 
 	strcpy(line, line_in);
 
@@ -251,7 +251,7 @@ void parse_status_line(char* line_in)
 	char* temp;
 	float tmpFloat;
 	int   n;
-	char line[BUFFER_SIZE];
+	char line[BufferSize];
 
 	lastStatusRXTime = millis();
 
@@ -393,7 +393,7 @@ void parse_state_line(char* stateLine)
 
 	char* thisToken;
 
-	char buffer[BUFFER_SIZE];
+	char buffer[BufferSize];
 
 	lastStateRXTime = millis();
 

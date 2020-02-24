@@ -17,7 +17,7 @@ void Menu::Draw()
 {
 	uint8_t         i;
 	char            valueBuf[15];
-	char			lineBuf[LCD_cols];
+	char			lineBuf[LCDCols];
 	float           floatVal;
 	int             intVal;
 	uint8_t         uint8Val;
@@ -27,15 +27,15 @@ void Menu::Draw()
 
 	menuOffset = (*pEncoderPosition)/4;
 
-	menuOffset = max(0, min(menuOffset, 7 - LCD_rows));
+	menuOffset = max(0, min(menuOffset, 7 - LCDRows));
 
 
 
-	for (i = 0; i < LCD_rows; i++) {
+	for (i = 0; i < LCDRows; i++) {
 
 		paramIndex = i + menuOffset;
 		pMenuPanel->setCursor(0, i);
-		pMenuPanel->print(LCD_EMPTY);  // erase the line
+		pMenuPanel->print(LCDEmpty);  // erase the line
 		pMenuPanel->setCursor(0, i);
 
 		strncpy(lineBuf, ((*(pParameters + paramIndex)).name), MenuTextLength);
@@ -153,14 +153,14 @@ uint8_t Menu::getIndexFromName(char* nameIn)
 	uint8_t i;
 	char tmpStr[MenuTextLength];
 
-	for (i = 0; i < LCD_rows; i++) {
+	for (i = 0; i < LCDRows; i++) {
 		getName(i, tmpStr);
 		if (strncmp(tmpStr, nameIn, MenuTextLength) == 0) {
 			break;
 		}
 	}
 
-	if (i < LCD_rows) {
+	if (i < LCDRows) {
 		return i;
 	}
 	else {

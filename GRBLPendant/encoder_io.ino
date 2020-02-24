@@ -95,3 +95,15 @@ void ResetJogEncoder()
 	lastJogCommandPosition = 0.0;
 }
 
+//--------------------------------------------------------------------------------------
+// ReadJogResetButton()
+//--------------------------------------------------------------------------------------
+bool ReadJogResetButton()
+{
+	bool sw = false;
+
+	// Rotary Encoder Select
+	sw = !jogResetButton.read();
+
+	return sw;
+}

@@ -11,42 +11,42 @@
 
 // Normal serial for debug ----------------------------------
 #define debugSerial     Serial3
-#define DEBUG_SERIAL    115200  
+constexpr auto DebugSerialSpeed = 115200  ;
 
 // Serial to GRBL
 #define grblSerial      Serial2
-#define GRBL_SERIAL     115200 
+constexpr auto GRBLSerialSpeed = 115200 ;
 
 // G-Code sender. Must be as fast as grbl!
 #define gsSerial        Serial
-#define GS_SERIAL       115200 
+constexpr auto GSSerialSpeed = 115200 ;
 
-const int BUFFER_SIZE = 100;
+const int BufferSize = 100;
 
 // LCD -------------------------------------------
-#define STATUS_LCD_ADDR		   0x23  // I2C LCD Address
-#define JOG_LCD_ADDR		   0x27  // I2C LCD Address
+constexpr auto StatusLCDAddress = 0x23;  // I2C LCD Address
+constexpr auto JogLCDAddress = 0x27;  // I2C LCD Address
 
-const int LCD_cols = 20;
-const int LCD_rows = 4;
+constexpr auto LCDCols = 20;
+constexpr auto LCDRows = 4;
 
-#if(LCD_cols==16)
-#define LCD_EMPTY   ("                ")
+#if(LCDCols==16)
+constexpr auto LCDEmpty("                ");
 #else
-#define LCD_EMPTY   ("                    ")
+constexpr auto LCDEmpty = ("                    ");
 #endif
 
 // LCD controller pins
 // Note that as we are using an I2C controller these are the pins
 // on the controller, not the pins on the Teensy that is running this
 // code.
-#define LCD_EN          2
-#define LCD_RW          1
-#define LCD_RS          0
-#define LCD_D4          4
-#define LCD_D5          5
-#define LCD_D6          6
-#define LCD_D7          7
+constexpr auto LCD_EN = 2;
+constexpr auto LCD_RW = 1;
+constexpr auto LCD_RS = 0;
+constexpr auto LCD_D4 = 4;
+constexpr auto LCD_D5 = 5;
+constexpr auto LCD_D6 = 6;
+constexpr auto LCD_D7 = 7;
 
 
 // UI Rotary Encoder --------------------------------
@@ -59,11 +59,14 @@ const int UI_ENC_COUNT = 80;  // encoder count per rotation
 #define JOG_ENC_A				2     // Encoder interrupt pin
 #define JOG_ENC_B				3     // Encoder second pin
 //#define JOG_ENC_S				4     // Encoder select pin
-const int JOG_ENC_COUNT = 400;  // encoder count per rotation
+constexpr auto JogEncCount = 400;  // encoder count per rotation
+
+constexpr auto JogResetPin = 11;
+
 
 // EEPROM addresses
-#define EEPROM_BUTTONS		100
-#define EEPROM_INTERVAL		150
+constexpr auto EEPROMButtons = 100;
+constexpr auto EEPROMInterval = 150;
 
 // only for debugging
 #define DEBUG

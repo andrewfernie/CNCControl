@@ -22,7 +22,7 @@ void display_state()
 	// MM LIN XY M1
 
 
-	char tmpStr[LCD_cols];
+	char tmpStr[LCDCols];
 
 	// ---------
 	// First Row
@@ -70,13 +70,14 @@ void display_state()
 		strcpy(tmpStr, "-----");
 		break;
 	}
+
 	StatusLCD.setCursor(0, 0); // letter, row
 	StatusLCD.print(tmpStr);
 
 	// ----------
 	// Second Row
 	StatusLCD.setCursor(0, 1); // letter, row
-	StatusLCD.print(LCD_EMPTY);
+	StatusLCD.print(LCDEmpty);
 	StatusLCD.setCursor(0, 1); // letter, row
 	if (grblState == GRBLStates::Alarm)
 	{
@@ -141,7 +142,7 @@ void display_state()
 
 	// Feed
 	sprintf(tmpStr, "%4.0f", currentFeedRate);
-	StatusLCD.setCursor((LCD_cols - strlen(tmpStr) - 4), 2);
+	StatusLCD.setCursor((LCDCols - strlen(tmpStr) - 4), 2);
 	StatusLCD.print(strcat(tmpStr, "mm/s"));
 
 	// ---------
@@ -192,7 +193,7 @@ void display_state()
 		strcpy(tmpStr, "-----");
 	}
 
-	StatusLCD.setCursor((LCD_cols - strlen(tmpStr)), 3);
+	StatusLCD.setCursor((LCDCols - strlen(tmpStr)), 3);
 	StatusLCD.print(tmpStr);
 }
 
@@ -209,7 +210,7 @@ void display_jogscreen()
 	// 
 	//
 
-	char tmpStr[LCD_cols];
+	char tmpStr[LCDCols];
 	int len;
 
 	// ---------
@@ -244,7 +245,7 @@ void display_jogscreen()
 	}
 
 	// Coordinate system
-	JogLCD.setCursor((LCD_cols - 4), 0);
+	JogLCD.setCursor((LCDCols - 4), 0);
 	switch (grblCoord)
 	{
 	case GRBLCoord::MPos:
@@ -271,7 +272,7 @@ void display_jogscreen()
 	// Y position
 	sprintf(tmpStr, "Y%8.2f", currentPosition.y);
 	len = strlen(tmpStr);
-	JogLCD.setCursor((LCD_cols - len), 1);
+	JogLCD.setCursor((LCDCols - len), 1);
 	JogLCD.print(tmpStr);
 
 
@@ -316,7 +317,7 @@ void display_jogscreen()
 	// Jog Rate
 	sprintf(tmpStr, "%6.1f", jogRates[currentJogRate]);
 	len = strlen(tmpStr);
-	JogLCD.setCursor((LCD_cols - len), 3);
+	JogLCD.setCursor((LCDCols - len), 3);
 	JogLCD.print(tmpStr);
 
 }

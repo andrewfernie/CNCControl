@@ -16,7 +16,7 @@ void parse_command_line(char* line)
 	{
 		// Display Menu from this device
 		debugSerial.print(F("<GRBL Pendant "));
-		debugSerial.print(VERSION);
+		debugSerial.print(ProgramVersion);
 		debugSerial.println(F(" MENU>"));
 
 		debugSerial.println(F("<:f\tShow free RAM>"));
@@ -53,7 +53,7 @@ void setinterval(char* line)
 	}
 	else {
 		debugSerial.print(F("<Interval: "));
-		debugSerial.print(EEPROMReadInt(EEPROM_INTERVAL));
+		debugSerial.print(EEPROMReadInt(EEPROMInterval));
 		debugSerial.println(F(">"));
 	}
 }
@@ -64,7 +64,7 @@ void setinterval(int ms)
 	debugSerial.print(ms);
 	debugSerial.println(F(">"));
 
-	EEPROMWriteInt(EEPROM_INTERVAL, ms);
+	EEPROMWriteInt(EEPROMInterval, ms);
 
 }
 
