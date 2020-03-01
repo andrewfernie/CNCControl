@@ -33,7 +33,7 @@
 // Defines
 // ===============================================
 //
-constexpr auto ProgramVersion = 0.22;
+constexpr auto ProgramVersion = 0.23;
 
 //
 // ===============================================
@@ -99,15 +99,16 @@ byte			counter_one_herz;
 // ------------
 // Keypad Setup
 // ------------
-const byte rows = 4; //four rows
+const byte rows = 5; //four rows
 const byte cols = 4; //four columns
 char keys[rows][cols] = {
   {'1','2','3','4'},
   {'5','6','7','8'},
   {'9','0','A','B'},
-  {'C','D','E','F'}
+  {'C','D','E','F'},
+  {'G','H','I','J'}
 };
-byte rowPins[rows] = { 14, 15, 16, 17 }; //connect to the row pinouts of the keypad
+byte rowPins[rows] = { 14, 15, 16, 17, 12 }; //connect to the row pinouts of the keypad
 byte colPins[cols] = { 20, 21, 22, 23 }; //connect to the column pinouts of the keypad
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, rows, cols);
 
@@ -478,6 +479,10 @@ void medium_loop()
 
 		if (key != NO_KEY)
 		{
+			//char tmpstr[2];
+			//tmpstr[0] = key;
+			//tmpstr[1] = '\0';
+			//DEBUG_PRINT(tmpstr);
 			ProcessKey(key);
 		}
 		break;

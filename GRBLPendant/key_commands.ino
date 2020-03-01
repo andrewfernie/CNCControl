@@ -141,6 +141,36 @@ void ProcessKey(char key)
 		ResetJogEncoder();
 		break;
 
+	case 'G':
+		if (grblCoord == GRBLCoord::MPos)
+		{
+			sendGRBLCommand("$10=0\n");     // Set to WPos
+		}
+		else if (grblCoord == GRBLCoord::WPos)
+		{
+			sendGRBLCommand("$10=1\n");     // Set to MPos
+		}
+		else
+		{
+			sendGRBLCommand("$10=1\n");     // Set to MPos
+		}
+		break;
+
+	case 'H':
+		currentJogAxis = CNCAxis::X;
+		ResetJogEncoder();
+		break;
+
+	case 'I':
+		currentJogAxis = CNCAxis::Y;
+		ResetJogEncoder();
+		break;
+
+	case 'J':
+		currentJogAxis = CNCAxis::Z;
+		ResetJogEncoder();
+		break;
+
 		//default:
 	}
 }
