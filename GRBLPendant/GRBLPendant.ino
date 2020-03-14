@@ -33,7 +33,7 @@
 // Defines
 // ===============================================
 //
-constexpr auto ProgramVersion = 0.23;
+constexpr auto ProgramVersion = 0.24;
 
 //
 // ===============================================
@@ -442,7 +442,7 @@ void fast_loop()
 		float jog_move = float(jogEncoderPosition) / JogEncCount * get_jog_scaling();
 		if (fabs(jog_move - lastJogCommandPosition) >= 0.001)
 		{
-			if (grbl_command_count < 5)
+			if (grbl_command_count < 3)
 			{
 				float jogDelta = jog_move - lastJogCommandPosition;
 				send_jog_command(jogDelta);

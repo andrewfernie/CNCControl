@@ -102,6 +102,31 @@ void sendGRBLCommand(const char command[])
 	grbl_command_count++;
 }
 
+void sendGRBLCommandSoftReset()
+{
+	sendGRBLCommand("\x18\n");	// GRBL Soft reset (ctrl-x)
+}
+
+void sendGRBLCommandUnlock()
+{
+	sendGRBLCommand("$X\n");
+}
+
+void sendGRBLCommandHome()
+{
+	sendGRBLCommand("$H\n");
+}
+
+void sendGRBLCommandWPos()
+{
+	sendGRBLCommand("$10=0\n");     // Set to WPos
+}
+
+void sendGRBLCommandMPos()
+{
+	sendGRBLCommand("$10=1\n");     // Set to MPos
+}
+
 // Analyze every command (from PC => Xlcd) and choose an action
 void parsePCCommand(char* line)
 {

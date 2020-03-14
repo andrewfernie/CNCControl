@@ -59,21 +59,25 @@ void ProcessKey(char key)
 		{
 			pendantMode = PendantModes::Control;
 		}
+
 		ResetJogEncoder();
+
+		sendGRBLCommandSoftReset();
+		grbl_command_count = 0;
 		break;
 
 	case '6':
 		if (grblCoord == GRBLCoord::MPos)
 		{
-			sendGRBLCommand("$10=0\n");     // Set to WPos
+			sendGRBLCommandWPos();     // Set to WPos
 		}
 		else if (grblCoord == GRBLCoord::WPos)
 		{
-			sendGRBLCommand("$10=1\n");     // Set to MPos
+			sendGRBLCommandMPos();     // Set to MPos
 		}
 		else
 		{
-			sendGRBLCommand("$10=1\n");     // Set to MPos
+			sendGRBLCommandMPos();     // Set to MPos
 		}
 		break;
 
@@ -89,7 +93,7 @@ void ProcessKey(char key)
 
 	case '9':
 		// Home
-		sendGRBLCommand("$H\n");
+		sendGRBLCommandHome();
 		break;
 
 	case '0':
@@ -120,13 +124,14 @@ void ProcessKey(char key)
 
 	case 'C':
 		// Unlock
-		sendGRBLCommand("$X\n");
+		sendGRBLCommandUnlock();
 		break;
 
 	case 'D':
 		if (pendantMode == PendantModes::Control)
 		{
-			sendGRBLCommand("\x18\n");	// GRBL Soft reset (ctrl-x)
+			sendGRBLCommandSoftReset();	// GRBL Soft reset (ctrl-x)
+			grbl_command_count = 0;
 		}
 		break;
 
@@ -144,15 +149,15 @@ void ProcessKey(char key)
 	case 'G':
 		if (grblCoord == GRBLCoord::MPos)
 		{
-			sendGRBLCommand("$10=0\n");     // Set to WPos
+			sendGRBLCommandWPos();     // Set to WPos
 		}
 		else if (grblCoord == GRBLCoord::WPos)
 		{
-			sendGRBLCommand("$10=1\n");     // Set to MPos
+			sendGRBLCommandMPos();     // Set to MPos
 		}
 		else
 		{
-			sendGRBLCommand("$10=1\n");     // Set to MPos
+			sendGRBLCommandMPos();     // Set to MPos
 		}
 		break;
 
