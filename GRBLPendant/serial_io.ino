@@ -190,7 +190,10 @@ void parseGrblLine(char* line_in)
 	{
 		if (pendantMode == PendantModes::Control)
 		{
-			grbl_command_count--;
+			if (grbl_command_count > 0)    // Prevent count from going below zero
+				grbl_command_count--;
+			else
+				grbl_command_count = 0;
 		}
 		else
 		{
@@ -285,19 +288,30 @@ void parse_status_line(char* line_in)
 	// First Line
 	// State ..
 	temp = strtok(line, delim);
-	set_grblState_from_chars(temp);
+
+	if(temp != NULL)
+		set_grblState_from_chars(temp);
+	else
+		grblState = GRBLStates::Undefined;
 
 
 	// Coordinates ..
 	temp = strtok(NULL, delim);
 
-	if (strcmp(temp, "MPos") == 0)
+	if (temp != NULL)
 	{
-		grblCoord = GRBLCoord::MPos;
-	}
-	else if (strcmp(temp, "WPos") == 0)
-	{
-		grblCoord = GRBLCoord::WPos;
+		if (strcmp(temp, "MPos") == 0)
+		{
+			grblCoord = GRBLCoord::MPos;
+		}
+		else if (strcmp(temp, "WPos") == 0)
+		{
+			grblCoord = GRBLCoord::WPos;
+		}
+		else
+		{
+			grblCoord = GRBLCoord::Undefined;
+		}
 	}
 	else
 	{
@@ -307,29 +321,39 @@ void parse_status_line(char* line_in)
 
 	// X Machine position ...
 	temp = strtok(NULL, delim);
-	n = sscanf(temp, "%f", &tmpFloat);
-
-	if (n == 1)
+	if (temp != NULL)
 	{
-		currentPosition.x = tmpFloat;
+		n = sscanf(temp, "%f", &tmpFloat);
+
+		if (n == 1)
+		{
+			currentPosition.x = tmpFloat;
+		}
 	}
+
 
 	// Y Machine position ...
 	temp = strtok(NULL, delim);
-	n = sscanf(temp, "%f", &tmpFloat);
-
-	if (n == 1)
+	if (temp != NULL)
 	{
-		currentPosition.y = tmpFloat;
+		n = sscanf(temp, "%f", &tmpFloat);
+
+		if (n == 1)
+		{
+			currentPosition.y = tmpFloat;
+		}
 	}
 
 	// Z Machine position ...
 	temp = strtok(NULL, delim);
-	n = sscanf(temp, "%f", &tmpFloat);
-
-	if (n == 1)
+	if (temp != NULL)
 	{
-		currentPosition.z = tmpFloat;
+		n = sscanf(temp, "%f", &tmpFloat);
+
+		if (n == 1)
+		{
+			currentPosition.z = tmpFloat;
+		}
 	}
 
 	temp = strtok(NULL, delim);

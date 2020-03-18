@@ -180,8 +180,8 @@ enum class CoolantState { Undefined, Mist, Flood, Off };
 CoolantState currentCoolantState = CoolantState::Undefined;
 
 // GRBL controller states
-enum class GRBLStates { Idle, Run, Hold, Jog, Alarm, Door, Check, Home, Sleep };
-GRBLStates grblState = GRBLStates::Alarm;
+enum class GRBLStates { Undefined, Idle, Run, Hold, Jog, Alarm, Door, Check, Home, Sleep};
+GRBLStates grblState = GRBLStates::Undefined;
 
 // Co-ordinate system
 enum class GRBLCoord { Undefined, MPos, WPos };
