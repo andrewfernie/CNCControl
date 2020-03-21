@@ -33,7 +33,7 @@
 // Defines
 // ===============================================
 //
-constexpr auto ProgramVersion = 0.24;
+constexpr auto ProgramVersion = 0.25;
 
 //
 // ===============================================
@@ -81,16 +81,16 @@ long lastStateRXTime = 0;
 // --------------
 // System Timers
 // --------------
-unsigned long 	fast_loopTimer;				// Time in miliseconds of main control loop
-unsigned long 	fast_loopTimeStamp;			// Time Stamp when fast loop was complete
+uint32_t 		fast_loopTimer;				// Time in miliseconds of main control loop
+uint32_t 	    fast_loopTimeStamp;			// Time Stamp when fast loop was complete
 uint8_t 		delta_ms_fast_loop; 		// Delta Time in miliseconds
 int 			mainLoop_count;
 
-unsigned long 	medium_loopTimer;			// Time in miliseconds of medium loop
+uint32_t 		medium_loopTimer;			// Time in miliseconds of medium loop
 byte 			medium_loopCounter;			// Counters for branching from main control loop to slower loops
 uint8_t			delta_ms_medium_loop;
 
-unsigned long 	slow_loopTimer;			// Time in miliseconds of medium loop
+uint32_t 		slow_loopTimer;				// Time in miliseconds of medium loop
 byte 			slow_loopCounter;
 uint8_t 		delta_ms_slow_loop; 		// Delta Time in miliseconds
 byte 			superslow_loopCounter;
@@ -217,7 +217,7 @@ float currentOvSpindleSpeedPercent; //Override Percent
 
 AxisData currentWCO;
 
-long lastIdleTimeoutCheck = 0;
+uint32_t  lastIdleTimeoutCheck = 0;
 
 // --------------
 // Jog parameters
@@ -273,6 +273,11 @@ Menu menuObject(menuParameters, &StatusLCD, &uiEncoderPosition);
 void setup()
 {
 	debugSerial.begin(DebugSerialSpeed);   // open serial for debug/status messages
+
+	pinMode(DEBUG_BROWN, OUTPUT);
+	pinMode(DEBUG_RED, OUTPUT);
+	pinMode(DEBUG_ORANGE, OUTPUT);
+	pinMode(DEBUG_YELLOW, OUTPUT);
 
 #ifdef UI_ENC_S
 	// set Select pin from Rotary Encoder to input
@@ -355,8 +360,14 @@ void loop()
 {
 	// Jobs
 
+	DEBUG_DIGITALWRITE_HIGH(DEBUG_BROWN);
 	serial_io_grbl();
+	DEBUG_DIGITALWRITE_LOW(DEBUG_BROWN);
+	
+	DEBUG_DIGITALWRITE_HIGH(DEBUG_RED);
 	serial_io_gs();
+	DEBUG_DIGITALWRITE_LOW(DEBUG_RED);
+
 
 	if (grbl_command_count != grbl_last_command_count)
 	{
@@ -371,6 +382,7 @@ void loop()
 	// We want this to execute at 50Hz if possible
 	// -------------------------------------------
 	if (millis() - fast_loopTimer > 19) {
+
 		delta_ms_fast_loop = millis() - fast_loopTimer;
 
 		fast_loopTimer = millis();
@@ -395,6 +407,7 @@ void loop()
 		}
 
 		fast_loopTimeStamp = millis();
+
 	}
 
 }//LOOP
@@ -405,6 +418,7 @@ void fast_loop()
 {
 	// This is the fast loop
 	// ---------------------
+	DEBUG_DIGITALWRITE_HIGH(DEBUG_ORANGE);
 
 	uiEncoderPosition = ReadUIEncoder();
 
@@ -452,14 +466,19 @@ void fast_loop()
 
 
 	}
+	DEBUG_DIGITALWRITE_LOW(DEBUG_ORANGE);
+
 }
 
 void medium_loop()
 {
 	// This is the start of the medium loop 
 	// -----------------------------------------
+	// The routine is called at 50Hz, so each of the five subbanded 
+	// blocks is called at 10Hz
 
 	char key;
+	DEBUG_DIGITALWRITE_HIGH(DEBUG_YELLOW);
 
 	switch (medium_loopCounter)
 	{
@@ -508,12 +527,18 @@ void medium_loop()
 
 		break;
 	}
+	DEBUG_DIGITALWRITE_LOW(DEBUG_YELLOW);
+
 }
 
 void slow_loop()
 {
 	// This is the slow (2Hz) loop pieces
 	//----------------------------------------
+	// The routine is called at 10Hz, so each of the five subbanded 
+	// blocks is called at 2Hz
+
+
 	switch (slow_loopCounter) {
 	case 0:
 		slow_loopCounter++;
@@ -567,6 +592,7 @@ void slow_loop()
 
 		break;
 	}
+
 }
 
 void one_second_loop()

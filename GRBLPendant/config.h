@@ -64,6 +64,12 @@ constexpr auto JogEncCount = 400;  // encoder count per rotation
 constexpr auto JogResetPin = 11;
 
 
+// Debug Pins --------------------------------
+#define DEBUG_BROWN				24     
+#define DEBUG_RED				25     
+#define DEBUG_ORANGE			26     
+#define DEBUG_YELLOW			27     
+
 // EEPROM addresses
 constexpr auto EEPROMButtons = 100;
 constexpr auto EEPROMInterval = 150;
@@ -76,9 +82,15 @@ constexpr auto EEPROMInterval = 150;
 #ifdef DEBUG_IO
 #define DEBUG_PRINT(str) debugSerial.print(str)
 #define DEBUG_PRINTLN(str) debugSerial.println(str)
+#define DEBUG_DIGITALWRITE(pin,value) digitalWrite(pin,value);
+#define DEBUG_DIGITALWRITE_HIGH(pin) digitalWrite(pin,HIGH);
+#define DEBUG_DIGITALWRITE_LOW(pin) digitalWrite(pin,LOW);
 #else
 #define DEBUG_PRINT(str)
 #define DEBUG_PRINTLN(str)
+#define DEBUG_DIGITALWRITE(pin,value)
+#define DEBUG_DIGITALWRITE_HIGH(pin)
+#define DEBUG_DIGITALWRITE_LOW(pin)
 #endif
 
 // Macros
