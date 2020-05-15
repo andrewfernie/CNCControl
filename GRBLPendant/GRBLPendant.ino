@@ -81,20 +81,20 @@ long lastStateRXTime = 0;
 // --------------
 // System Timers
 // --------------
-uint32_t 		fast_loopTimer;				// Time in miliseconds of main control loop
-uint32_t 	    fast_loopTimeStamp;			// Time Stamp when fast loop was complete
-uint8_t 		delta_ms_fast_loop; 		// Delta Time in miliseconds
-int 			mainLoop_count;
+uint32_t 		fast_loopTimer = 0;				// Time in miliseconds of main control loop
+uint32_t 	    fast_loopTimeStamp = 0;			// Time Stamp when fast loop was complete
+uint8_t 		delta_ms_fast_loop = 0; 		// Delta Time in miliseconds
+int 			mainLoop_count = 0;
 
-uint32_t 		medium_loopTimer;			// Time in miliseconds of medium loop
-byte 			medium_loopCounter;			// Counters for branching from main control loop to slower loops
-uint8_t			delta_ms_medium_loop;
+uint32_t 		medium_loopTimer = 0;			// Time in miliseconds of medium loop
+byte 			medium_loopCounter = 0;			// Counters for branching from main control loop to slower loops
+uint8_t			delta_ms_medium_loop = 0;
 
-uint32_t 		slow_loopTimer;				// Time in miliseconds of medium loop
-byte 			slow_loopCounter;
-uint8_t 		delta_ms_slow_loop; 		// Delta Time in miliseconds
-byte 			superslow_loopCounter;
-byte			counter_one_herz;
+uint32_t 		slow_loopTimer = 0;				// Time in miliseconds of medium loop
+byte 			slow_loopCounter = 0;
+uint8_t 		delta_ms_slow_loop = 0; 		// Delta Time in miliseconds
+byte 			superslow_loopCounter = 0;
+byte			counter_one_herz = 0;
 
 // ------------
 // Keypad Setup
