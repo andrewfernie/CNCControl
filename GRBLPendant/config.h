@@ -65,10 +65,10 @@ constexpr auto JogResetPin = 11;
 
 
 // Debug Pins --------------------------------
-#define DEBUG_BROWN				24     
-#define DEBUG_RED				25     
-#define DEBUG_ORANGE			26     
-#define DEBUG_YELLOW			27     
+constexpr auto DEBUG_BROWN  = 24;
+constexpr auto DEBUG_RED    = 25;
+constexpr auto DEBUG_ORANGE = 26;
+constexpr auto DEBUG_YELLOW = 27;
 
 // EEPROM addresses
 constexpr auto EEPROMButtons = 100;

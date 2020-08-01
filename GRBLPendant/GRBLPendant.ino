@@ -33,7 +33,7 @@
 // Defines
 // ===============================================
 //
-constexpr auto ProgramVersion = 0.25;
+constexpr auto ProgramVersion = 0.26;
 
 //
 // ===============================================

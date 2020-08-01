@@ -135,10 +135,10 @@ void parsePCCommand(char* line)
 	if (line[0] == ':')
 	{
 		parse_command_line(line);
-	}
+	} 
 	else 
 	{
-		sendGRBLCommand(line);
+		sendGRBLCommand_NoCount(line);  // count will be handled by the newline
 		sendGRBLCommand("\n");
 	}
 }
