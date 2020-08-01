@@ -315,7 +315,7 @@ void display_jogscreen()
 	JogLCD.print(tmpStr);
 
 	// Jog Rate
-	sprintf(tmpStr, "%6.1f", jogRates[currentJogRate]);
+	sprintf(tmpStr, "%6.1f", jogRates[currentJogRateIndex]);
 	len = strlen(tmpStr);
 	JogLCD.setCursor((LCDCols - len), 3);
 	JogLCD.print(tmpStr);

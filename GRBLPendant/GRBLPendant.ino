@@ -33,7 +33,7 @@
 // Defines
 // ===============================================
 //
-constexpr auto ProgramVersion = 0.26;
+constexpr auto ProgramVersion = 0.27;
 
 //
 // ===============================================
@@ -229,8 +229,11 @@ float   jogScalings[] = { 1.0, 10.0, 100.0, 10.0 }; // values are mm per encoder
 const float MaxJogScaling = 500.0;
 uint8_t currentJogScaling = 0;
 
-float   jogRates[] = { 60.0, 90.0, 300.0, 600.0, 900.0, 3000.0 }; // values are "units" (mm or inches) per minute
-uint8_t currentJogRate = 2;
+float   jogRates[] = { 50.0, 100.0, 200.0, 500.0, 1000.0, 2000.0 }; // values are "units" (mm or inches) per minute
+constexpr auto defaultJpogRateIndex = 3;
+
+uint8_t maxJogRateIndex = 5;
+uint8_t currentJogRateIndex = defaultJpogRateIndex;
 
 int grbl_command_count = 0;
 int grbl_last_command_count = 0;
@@ -685,8 +688,33 @@ float get_jog_step()
 float get_jog_rate()
 {
 	//	float   jogRates[] = { 60.0, 90.0, 300.0, 600.0, 900.0, 3000.0 }; // values are "units" (mm or inches) per minute
-	return jogRates[currentJogRate];
+	return jogRates[currentJogRateIndex];
 }
+
+uint8_t setJogRateIndex(uint8_t index)
+{
+	currentJogRateIndex = max(0, min(index, maxJogRateIndex));
+	return currentJogRateIndex;
+}
+
+uint8_t incrementJogRateIndex()
+{
+	if (currentJogRateIndex < maxJogRateIndex)
+	{ 
+		currentJogRateIndex++;
+	}
+	return currentJogRateIndex;
+}
+
+uint8_t decrementJogRateIndex()
+{
+	if (currentJogRateIndex > 0)
+	{
+		currentJogRateIndex--;
+	}
+	return currentJogRateIndex;
+}
+
 
 float get_jog_scaling()
 {

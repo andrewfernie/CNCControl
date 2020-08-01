@@ -24,7 +24,7 @@ constexpr auto GSSerialSpeed = 115200 ;
 const int BufferSize = 100;
 
 // LCD -------------------------------------------
-constexpr auto StatusLCDAddress = 0x23;  // I2C LCD Address
+constexpr auto StatusLCDAddress = 0x26;  // I2C LCD Address
 constexpr auto JogLCDAddress = 0x27;  // I2C LCD Address
 
 constexpr auto LCDCols = 20;

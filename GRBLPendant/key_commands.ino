@@ -82,8 +82,7 @@ void ProcessKey(char key)
 		break;
 
 	case '7':
-		currentJogAxis = CNCAxis::Z;
-		ResetJogEncoder();
+		incrementJogRateIndex();
 		break;
 
 	case '8':
@@ -113,8 +112,7 @@ void ProcessKey(char key)
 		break;
 
 	case 'A':
-		currentJogAxis = CNCAxis::Y;
-		ResetJogEncoder();
+		setJogRateIndex(defaultJpogRateIndex);
 		break;
 
 	case 'B':
@@ -137,8 +135,7 @@ void ProcessKey(char key)
 
 	case 'E':
 
-		currentJogAxis = CNCAxis::X;
-		ResetJogEncoder();
+		decrementJogRateIndex();
 		break;
 
 	case 'F':
@@ -162,7 +159,7 @@ void ProcessKey(char key)
 		break;
 
 	case 'H':
-		currentJogAxis = CNCAxis::X;
+		currentJogAxis = CNCAxis::Z;
 		ResetJogEncoder();
 		break;
 
@@ -172,7 +169,7 @@ void ProcessKey(char key)
 		break;
 
 	case 'J':
-		currentJogAxis = CNCAxis::Z;
+		currentJogAxis = CNCAxis::X;
 		ResetJogEncoder();
 		break;
 
