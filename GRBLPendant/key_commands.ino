@@ -32,7 +32,7 @@ void ProcessKey(char key)
 		ResetJogEncoder();
 		if (pendantMode == PendantModes::Control)
 		{
-			send_jog_command(+1.0 * get_jog_step());
+			SendJogCommand(+1.0 * getJogSize());
 		}
 		break;
 
@@ -41,12 +41,12 @@ void ProcessKey(char key)
 		ResetJogEncoder();
 		if (pendantMode == PendantModes::Control)
 		{
-			send_jog_command(-1.0 * get_jog_step());
+			SendJogCommand(-1.0 * getJogSize());
 		}
 		break;
 
 	case '4':
-		currentJogScaling = 3;
+		enableAdjustableJogSize = true;
 		ResetJogEncoder();
 		break;
 
@@ -86,7 +86,7 @@ void ProcessKey(char key)
 		break;
 
 	case '8':
-		currentJogScaling = 2;
+		incrementJogSizeIndex();
 		ResetJogEncoder();
 		break;
 
@@ -112,11 +112,11 @@ void ProcessKey(char key)
 		break;
 
 	case 'A':
-		setJogRateIndex(defaultJpogRateIndex);
+		setJogRateDefault();
 		break;
 
 	case 'B':
-		currentJogScaling = 1;
+		setJogSizeDefault();
 		ResetJogEncoder();
 		break;
 
@@ -134,12 +134,11 @@ void ProcessKey(char key)
 		break;
 
 	case 'E':
-
 		decrementJogRateIndex();
 		break;
 
 	case 'F':
-		currentJogScaling = 0;
+		decrementJogSizeIndex();
 		ResetJogEncoder();
 		break;
 

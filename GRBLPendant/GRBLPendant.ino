@@ -225,15 +225,19 @@ uint32_t  lastIdleTimeoutCheck = 0;
 enum class CNCAxis { X, Y, Z };
 CNCAxis currentJogAxis = CNCAxis::X;
 
-float   jogScalings[] = { 1.0, 10.0, 100.0, 10.0 }; // values are mm per encoder revolution. Last value is adjutable
-const float MaxJogScaling = 500.0;
-uint8_t currentJogScaling = 0;
+float   jogSize[] = { 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0 }; // values are mm per encoder revolution. 
+constexpr auto defaultJogSizeIndex = 3;
+uint8_t maxJogSizeIndex = sizeof(jogSize) / sizeof(jogSize[0]) - 1;
+uint8_t currentJogSizeIndex = defaultJogSizeIndex;
+float   adjustableJogSize = 10.0;
+uint8_t enableAdjustableJogSize = false;
 
-float   jogRates[] = { 50.0, 100.0, 200.0, 500.0, 1000.0, 2000.0 }; // values are "units" (mm or inches) per minute
-constexpr auto defaultJpogRateIndex = 3;
 
-uint8_t maxJogRateIndex = 5;
-uint8_t currentJogRateIndex = defaultJpogRateIndex;
+
+float   jogRate[] = { 50.0, 100.0, 200.0, 500.0, 1000.0, 2000.0 }; // values are "units" (mm or inches) per minute
+constexpr auto defaultJogRateIndex = 3;
+uint8_t maxJogRateIndex = sizeof(jogRate) / sizeof(jogRate[0]) - 1;
+uint8_t currentJogRateIndex = defaultJogRateIndex;
 
 int grbl_command_count = 0;
 int grbl_last_command_count = 0;
@@ -456,13 +460,13 @@ void fast_loop()
 
 	if (pendantMode == PendantModes::Control)
 	{
-		float jog_move = float(jogEncoderPosition) / JogEncCount * get_jog_scaling();
+		float jog_move = float(jogEncoderPosition) / JogEncCount * getJogSize();
 		if (fabs(jog_move - lastJogCommandPosition) >= 0.001)
 		{
 			if (grbl_command_count < 3)
 			{
 				float jogDelta = jog_move - lastJogCommandPosition;
-				send_jog_command(jogDelta);
+				SendJogCommand(jogDelta);
 				lastJogCommandPosition = lastJogCommandPosition + jogDelta;
 			}
 		}
@@ -661,39 +665,20 @@ void set_grblState_from_chars(char* tmp)
 	if (strcmp(tmp, "Sleep") == 0)   grblState = GRBLStates::Sleep;
 }
 
-float get_jog_step()
+float getJogRate()
 {
-	float step;
-	switch (currentJogScaling)
-	{
-	case 0:
-		step = jogScalings[0];
-		break;
-	case 1:
-		step = jogScalings[1];
-		break;
-	case 2:
-		step = jogScalings[2];
-		break;
-	case 3:
-		step = jogScalings[3];
-		break;
-	default:
-		step = 0.0;
-	}
-
-	return step;
-}
-
-float get_jog_rate()
-{
-	//	float   jogRates[] = { 60.0, 90.0, 300.0, 600.0, 900.0, 3000.0 }; // values are "units" (mm or inches) per minute
-	return jogRates[currentJogRateIndex];
+	return jogRate[currentJogRateIndex];
 }
 
 uint8_t setJogRateIndex(uint8_t index)
 {
 	currentJogRateIndex = max(0, min(index, maxJogRateIndex));
+	return currentJogRateIndex;
+}
+
+uint8_t setJogRateDefault()
+{
+	currentJogRateIndex = defaultJogRateIndex;
 	return currentJogRateIndex;
 }
 
@@ -716,9 +701,43 @@ uint8_t decrementJogRateIndex()
 }
 
 
-float get_jog_scaling()
+float getJogSize()
 {
-	return jogScalings[currentJogScaling];
+	return jogSize[currentJogSizeIndex];
+}
+
+uint8_t setJogSizeIndex(uint8_t index)
+{
+	currentJogSizeIndex = max(0, min(index, maxJogSizeIndex));
+	enableAdjustableJogSize = false;
+	return currentJogSizeIndex;
+}
+
+uint8_t setJogSizeDefault()
+{
+	currentJogSizeIndex = defaultJogSizeIndex;
+	enableAdjustableJogSize = false;
+	return currentJogSizeIndex;
+}
+
+uint8_t incrementJogSizeIndex()
+{
+	if (currentJogSizeIndex < maxJogSizeIndex)
+	{
+		currentJogSizeIndex++;
+	}
+	enableAdjustableJogSize = false;
+	return currentJogSizeIndex;
+}
+
+uint8_t decrementJogSizeIndex()
+{
+	if (currentJogSizeIndex > 0)
+	{
+		currentJogSizeIndex--;
+	}
+	enableAdjustableJogSize = false;
+	return currentJogSizeIndex;
 }
 
 uint32_t freeMem()

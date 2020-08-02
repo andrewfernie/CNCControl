@@ -579,7 +579,7 @@ void parse_state_line(char* stateLine)
 	}
 }
 
-void send_jog_command(float displacement)
+void SendJogCommand(float displacement)
 {
 	char commandStr[30];
 	char tmpStr[30];
@@ -602,7 +602,7 @@ void send_jog_command(float displacement)
 	sprintf(tmpStr, "%f", displacement);
 	strcat(commandStr, tmpStr);
 
-	sprintf(tmpStr, "F%d\n", int(get_jog_rate()));
+	sprintf(tmpStr, "F%d\n", int(getJogRate()));
 	strcat(commandStr, tmpStr);
 
 	sendGRBLCommand(commandStr);

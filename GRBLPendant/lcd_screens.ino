@@ -308,14 +308,14 @@ void display_jogscreen()
 	}
 
 	// Jog Step
-	sprintf(tmpStr, "%5.1f", jogScalings[currentJogScaling]);
+	sprintf(tmpStr, "%5.1f", getJogSize());
 	len = strlen(tmpStr);
 
 	JogLCD.setCursor(7, 3);
 	JogLCD.print(tmpStr);
 
 	// Jog Rate
-	sprintf(tmpStr, "%6.1f", jogRates[currentJogRateIndex]);
+	sprintf(tmpStr, "%6.1f", getJogRate());
 	len = strlen(tmpStr);
 	JogLCD.setCursor((LCDCols - len), 3);
 	JogLCD.print(tmpStr);
