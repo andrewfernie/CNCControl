@@ -10,7 +10,7 @@
 // This code started from the XLCD project by Frank Herrmann
 //----------------------------------------------------------
 
-void display_state()
+void DisplayState()
 {
 
 	// Display on LCD ...
@@ -82,12 +82,12 @@ void display_state()
 	if (grblState == GRBLStates::Alarm)
 	{
 		StatusLCD.print("Alm:");
-		StatusLCD.print(alarm_message[alarm_number]);
+		StatusLCD.print(alarm_message[alarmNumber]);
 	}
 	else
 	{
 		if (millis() - lastErrorTime < 5000)
-			StatusLCD.print(error_message[error_number]);
+			StatusLCD.print(errorMessage[errorNumber]);
 		else
 			StatusLCD.print(lastMessage);
 	}
@@ -102,7 +102,7 @@ void display_state()
 	// erase message if more than 5s old
 	if (millis() - lastErrorTime > 5000)
 	{
-		error_number = 0;
+		errorNumber = 0;
 	}
 
 	// ---------
@@ -199,7 +199,7 @@ void display_state()
 
 
 
-void display_jogscreen()
+void DisplayJogScreen()
 {
 
 	// Display on LCD ...

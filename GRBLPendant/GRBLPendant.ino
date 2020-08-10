@@ -199,9 +199,9 @@ float currentOvRapidRatePercent;  //Override Percent
 
 char lastMessage[BufferSize];
 unsigned long lastMessageTime=0;
-int  alarm_number = 0;			// Alarm message number
+int  alarmNumber = 0;			// Alarm message number
 unsigned long lastAlarmTime = 0;
-int  error_number = 0;			// Error message number
+int  errorNumber = 0;			// Error message number
 unsigned long lastErrorTime = 0;
 
 struct AxisData
@@ -239,7 +239,7 @@ constexpr auto defaultJogRateIndex = 3;
 uint8_t maxJogRateIndex = sizeof(jogRate) / sizeof(jogRate[0]) - 1;
 uint8_t currentJogRateIndex = defaultJogRateIndex;
 
-int grbl_command_count = 0;
+int grblCommandCount = 0;
 int grbl_last_command_count = 0;
 float lastJogCommandPosition;
 
@@ -368,19 +368,19 @@ void loop()
 	// Jobs
 
 	DEBUG_DIGITALWRITE_HIGH(DEBUG_BROWN);
-	serial_io_grbl();
+	SerialIOGRBL();
 	DEBUG_DIGITALWRITE_LOW(DEBUG_BROWN);
 	
 	DEBUG_DIGITALWRITE_HIGH(DEBUG_RED);
-	serial_io_gs();
+	SerialIOGS();
 	DEBUG_DIGITALWRITE_LOW(DEBUG_RED);
 
 
-	if (grbl_command_count != grbl_last_command_count)
+	if (grblCommandCount != grbl_last_command_count)
 	{
 		//DEBUG_PRINT("Command Count:");
-		//DEBUG_PRINTLN(grbl_command_count);
-		grbl_last_command_count = grbl_command_count;
+		//DEBUG_PRINTLN(grblCommandCount);
+		grbl_last_command_count = grblCommandCount;
 	}
 
 	// Update the Bounce instance
@@ -463,7 +463,7 @@ void fast_loop()
 		float jog_move = float(jogEncoderPosition) / JogEncCount * getJogSize();
 		if (fabs(jog_move - lastJogCommandPosition) >= 0.001)
 		{
-			if (grbl_command_count < 3)
+			if (grblCommandCount < 3)
 			{
 				float jogDelta = jog_move - lastJogCommandPosition;
 				SendJogCommand(jogDelta);
@@ -554,7 +554,7 @@ void slow_loop()
 		slow_loopTimer = millis();
 
 		if (menuMode == MenuModes::Status)
-			display_state();
+			DisplayState();
 		else
 			menuObject.Draw();
 
@@ -563,7 +563,7 @@ void slow_loop()
 	case 1:
 		slow_loopCounter++;
 
-		display_jogscreen();
+		DisplayJogScreen();
 
 		break;
 
@@ -572,7 +572,7 @@ void slow_loop()
 
 		if ((pendantMode == PendantModes::Control) && (millis() - lastStatusRXTime > 1000))
 		{
-			sendGRBLCommand_NoCount("?");
+			SendGRBLCommand_NoCount("?");
 		}
 		break;
 
@@ -581,7 +581,7 @@ void slow_loop()
 
 		if ((pendantMode == PendantModes::Control) && (millis() - lastStateRXTime > 1000))
 		{
-			sendGRBLCommand("$G\n");
+			SendGRBLCommand("$G\n");
 		}
 
 		break;
@@ -610,7 +610,7 @@ void one_second_loop()
 		{
 			if (millis() - lastIdleTimeoutCheck > 5000)
 			{
-				grbl_command_count = 0;
+				ResetGRBLCommandCount();
 			}
 		}
 		else
@@ -620,7 +620,7 @@ void one_second_loop()
 	}
 	else
 	{
-		grbl_command_count = 0;
+		grblCommandCount = 0;
 	}
 }
 

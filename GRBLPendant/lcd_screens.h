@@ -40,9 +40,9 @@
 // 37	The G43.1 dynamic tool length offset command cannot apply an offset to an axis other than its configured axis.The Grbl default axis is the Z - axis.
 // 38	Tool number greater than max supported value.
 
-const int error_num_min = 1;
-const int error_num_max = 38;
-const char error_message[][17] =
+const int errorNumMin = 1;
+const int errorNumMax = 38;
+const char errorMessage[][17] =
 {
 	//0  
 	"Not an error    ",

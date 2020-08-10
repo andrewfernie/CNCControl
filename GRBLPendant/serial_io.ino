@@ -11,7 +11,7 @@
 //----------------------------------------------------------
 
 // Get data from GRBL ==> PC
-void serial_io_grbl()
+void SerialIOGRBL()
 {
 	while (grblSerial.available())
 	{
@@ -22,7 +22,7 @@ void serial_io_grbl()
 		if (c == '\n') {
 
 			DEBUG_PRINTLN(grserial);
-			parseGrblLine(grserial);
+			ParseGrblLine(grserial);
 
 			gr = 0;
 			memset(&grserial[0], 0, sizeof(grserial));
@@ -36,7 +36,7 @@ void serial_io_grbl()
 }
 
 // Get data from PC ==> GRBL
-void serial_io_gs()
+void SerialIOGS()
 {
 	while (gsSerial.available())
 	{
@@ -67,7 +67,7 @@ void serial_io_gs()
 		{
 			// wait for a complete line
 			// and parse it
-			parsePCCommand(pcserial);
+			ParsePCCommand(pcserial);
 		
 			pc = 0;
 			memset(&pcserial[0], 0, sizeof(pcserial));
@@ -83,68 +83,80 @@ void serial_io_gs()
 	}
 }
 
-void sendGRBLCommand_NoCount(char* command)
+void SendGRBLCommand_NoCount(char* command)
 {
 	grblSerial.print(command);
 }
-void sendGRBLCommand(char* command)
+void SendGRBLCommand(char* command)
 {
-	sendGRBLCommand_NoCount(command);
-	grbl_command_count++;
+	SendGRBLCommand_NoCount(command);
+	grblCommandCount++;
 }
-void sendGRBLCommand_NoCount(const char command[])
+void SendGRBLCommand_NoCount(const char command[])
 {
 	grblSerial.print(command);
 }
-void sendGRBLCommand(const char command[])
+
+void SendGRBLCommand(const char command[])
 {
-	sendGRBLCommand_NoCount(command);
-	grbl_command_count++;
+	SendGRBLCommand_NoCount(command);
+	grblCommandCount++;
 }
 
-void sendGRBLCommandSoftReset()
+void ResetGRBLCommandCount()
 {
-	sendGRBLCommand("\x18\n");	// GRBL Soft reset (ctrl-x)
+	grblCommandCount = 0;
 }
 
-void sendGRBLCommandUnlock()
+void SendGRBLCommandSoftReset()
 {
-	sendGRBLCommand("$X\n");
+	SendGRBLCommand("\x18");	// GRBL Soft reset (ctrl-x) - note no CRLF
 }
 
-void sendGRBLCommandHome()
+void SendGRBLCommandUnlock()
 {
-	sendGRBLCommand("$H\n");
+	SendGRBLCommand("$X\n");
 }
 
-void sendGRBLCommandWPos()
+void SendGRBLCommandFeedHold()
 {
-	sendGRBLCommand("$10=0\n");     // Set to WPos
+	SendGRBLCommand("!");     // GRBL Feed hold (so stop jog) - note no CRLF
+	ResetGRBLCommandCount();	// GRBL flushes the buffer when it receives a feed hold
 }
 
-void sendGRBLCommandMPos()
+void SendGRBLCommandHome()
 {
-	sendGRBLCommand("$10=1\n");     // Set to MPos
+	SendGRBLCommand("$H\n");
+}
+
+void SendGRBLCommandWPos()
+{
+	SendGRBLCommand("$10=0\n");     // Set to WPos
+}
+
+void SendGRBLCommandMPos()
+{
+	SendGRBLCommand("$10=1\n");     // Set to MPos
 }
 
 // Analyze every command (from PC => Xlcd) and choose an action
-void parsePCCommand(char* line)
+void ParsePCCommand(char* line)
 {
 	// All commands with an ':' at start can control GRBLPendant
 	// dont send them to grbl
 	if (line[0] == ':')
 	{
-		parse_command_line(line);
+		ParseCommandLine(line);
 	} 
 	else 
 	{
-		sendGRBLCommand_NoCount(line);  // count will be handled by the newline
-		sendGRBLCommand("\n");
+		SendGRBLCommand_NoCount(line);  // count will be handled by the newline
+		SendGRBLCommand("\n");
 	}
 }
 
 // Analyze every line and choose an action
-void parseGrblLine(char* line_in)
+void ParseGrblLine(char* line_in)
 {
 	char line[BufferSize];
 
@@ -155,7 +167,7 @@ void parseGrblLine(char* line_in)
 
 	if (line[0] == '<')
 	{
-		parse_status_line(line);
+		ParseStatusLine(line);
 		gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
 		gsSerial.print("\n");
 	}
@@ -177,7 +189,7 @@ void parseGrblLine(char* line_in)
 	}
 	else if (line[0] == '[')
 	{
-		parse_state_line(line);
+		ParseStateLine(line);
 
 		if (pendantMode != PendantModes::Control)
 		{
@@ -190,10 +202,10 @@ void parseGrblLine(char* line_in)
 	{
 		if (pendantMode == PendantModes::Control)
 		{
-			if (grbl_command_count > 0)    // Prevent count from going below zero
-				grbl_command_count--;
+			if (grblCommandCount > 0)    // Prevent count from going below zero
+				grblCommandCount--;
 			else
-				grbl_command_count = 0;
+				ResetGRBLCommandCount();
 		}
 		else
 		{
@@ -215,15 +227,15 @@ void parseGrblLine(char* line_in)
 		if(line[7] >= '0' && line[7]<='9')
 			errCode[1] = line[7];
 
-		error_number = atoi(errCode);
+		errorNumber = atoi(errCode);
 
-		if (error_number < error_num_min)
+		if (errorNumber < errorNumMin)
 		{
-			error_number = 0;
+			errorNumber = 0;
 		}
-		else if (error_number > error_num_max)
+		else if (errorNumber > errorNumMax)
 		{
-			error_number = 0;
+			errorNumber = 0;
 		}
 		lastErrorTime = millis();
 
@@ -240,14 +252,14 @@ void parseGrblLine(char* line_in)
 
 		//DEBUG_PRINTLN(line_in);
 
-		alarm_number = line[6] - '0';
-		if (alarm_number < alarm_num_min)
+		alarmNumber = line[6] - '0';
+		if (alarmNumber < alarm_num_min)
 		{
-			alarm_number = 0;
+			alarmNumber = 0;
 		}
-		else if (alarm_number > alarm_num_max)
+		else if (alarmNumber > alarm_num_max)
 		{
-			alarm_number = 0;
+			alarmNumber = 0;
 		}
 	}
 	else
@@ -267,7 +279,7 @@ void parseGrblLine(char* line_in)
 //	gsSerial.print(grserial);     // send line from the grbl controller to the g-code sender
 //	gsSerial.print(c);
 //}
-void parse_status_line(char* line_in)
+void ParseStatusLine(char* line_in)
 {
 	// Typical status lines formats
 	//
@@ -428,7 +440,7 @@ void parse_status_line(char* line_in)
 }
 
 // send every second the command $G
-void parse_state_line(char* stateLine)
+void ParseStateLine(char* stateLine)
 {
 	// Typical state line
 	// [GC:G0 G54 G17 G21 G90 G94 M5 M9 T0 F0 S0]
@@ -605,7 +617,7 @@ void SendJogCommand(float displacement)
 	sprintf(tmpStr, "F%d\n", int(getJogRate()));
 	strcat(commandStr, tmpStr);
 
-	sendGRBLCommand(commandStr);
+	SendGRBLCommand(commandStr);
 
 //	DEBUG_PRINTLN(commandStr);
 }
@@ -620,10 +632,10 @@ void spindle_on(int speed)
 	sprintf(tmpStr, "%d\n", speed);
 	strcat(commandStr, tmpStr);
 
-	sendGRBLCommand(commandStr);
+	SendGRBLCommand(commandStr);
 }
 
 void spindle_off()
 {
-	sendGRBLCommand("M5\n");
+	SendGRBLCommand("M5\n");
 }

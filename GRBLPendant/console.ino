@@ -10,7 +10,7 @@
 // This code started from the XLCD project by Frank Herrmann
 //----------------------------------------------------------
 
-void parse_command_line(char* line)
+void ParseCommandLine(char* line)
 {
 	if (line[1] == '?')
 	{
