@@ -27,6 +27,7 @@
 #include "config.h"
 #include "menu.h"
 #include "lcd_screens.h"
+#include "Encoder2.h"
 
 //
 // ===============================================
@@ -63,16 +64,10 @@ bool uiEncoderSwitch = false;
 #endif
 
 #ifdef JOG_ENC_A
-Encoder jogEncoder(JOG_ENC_A, JOG_ENC_B);
-long jogEncoderPosition = -999;
+
+CEncoder2 jogEncoder(JOG_ENC_A, JOG_ENC_B);
 Bounce jogResetButton = Bounce();
-long   lastJogEncoderPosition = 0;
 #endif
-
-#ifdef JOG_ENC_S
-bool jogEncoderSwitch = false;
-#endif
-
 
 long lastStatusRXTime = 0;
 long lastStateRXTime = 0;
@@ -241,7 +236,7 @@ uint8_t currentJogRateIndex = defaultJogRateIndex;
 
 int grblCommandCount = 0;
 int grbl_last_command_count = 0;
-float lastJogCommandPosition;
+float lastJogCommandPosition = 0.0;
 
 // --------------
 // Menu 
@@ -291,10 +286,7 @@ void setup()
 	pinMode(UI_ENC_S, INPUT);      // sets the encoder select digital pin
 #endif
 
-#ifdef JOG_ENC_S
-	// set Select pin from Rotary Encoder to input
-	pinMode(JOG_ENC_S, INPUT);      // sets the encoder select digital pin
-#endif
+
 
 	  // Setup the first button with an internal pull-up :
 	pinMode(JogResetPin, INPUT_PULLUP);
@@ -423,6 +415,8 @@ void loop()
 // Main loop
 void fast_loop()
 {
+	long jogPosition = 0;
+
 	// This is the fast loop
 	// ---------------------
 	DEBUG_DIGITALWRITE_HIGH(DEBUG_ORANGE);
@@ -440,12 +434,12 @@ void fast_loop()
 
 	if (!ReadJogResetButton())
 	{
-		jogEncoderPosition = ReadJogEncoder();
+		jogPosition = jogEncoder.GetPosition();
 	}
 	else
 	{
-		ResetJogEncoder();
-		jogEncoderPosition = 0;
+		jogPosition = 0;
+		jogEncoder.Reset();
 	}
 
 
@@ -460,7 +454,8 @@ void fast_loop()
 
 	if (pendantMode == PendantModes::Control)
 	{
-		float jog_move = float(jogEncoderPosition) / JogEncCount * getJogSize();
+		float jog_move = float(jogPosition) / JogEncCount * getJogSize();
+
 		if (fabs(jog_move - lastJogCommandPosition) >= 0.001)
 		{
 			if (grblCommandCount < 3)
@@ -470,8 +465,6 @@ void fast_loop()
 				lastJogCommandPosition = lastJogCommandPosition + jogDelta;
 			}
 		}
-
-
 	}
 	DEBUG_DIGITALWRITE_LOW(DEBUG_ORANGE);
 
@@ -595,7 +588,6 @@ void slow_loop()
 //	       DEBUG_PRINTLN("TRUE");
 //      else
 //	       DEBUG_PRINTLN("FALSE");
-
 
 		break;
 	}

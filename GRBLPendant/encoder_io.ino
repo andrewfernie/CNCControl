@@ -53,47 +53,6 @@ void ResetUIEncoder()
 
 // ==============================
 
-//--------------------------------------------------------------------------------------
-// ReadJogEncoder()
-//--------------------------------------------------------------------------------------
-long ReadJogEncoder()
-{
-
-#ifdef JOG_ENC_A
-	long newEncoder = jogEncoder.read();
-
-	return newEncoder;
-#endif
-}
-
-//--------------------------------------------------------------------------------------
-// ResetJogEncoderCount()
-//--------------------------------------------------------------------------------------
-void ResetJogEncoderCount()
-{
-#ifdef JOG_ENC_A
-	jogEncoder.write(0);
-#endif
-}
-
-//--------------------------------------------------------------------------------------
-// ReadJogEncoderSwitch(()
-//--------------------------------------------------------------------------------------
-bool ReadJogEncoderSwitch()
-{
-	bool sw = false;
-#ifdef JOG_ENC_S
-	// Rotary Encoder Select
-	sw = !digitalRead(JOG_ENC_S);
-#endif
-	return sw;
-}
-
-void ResetJogEncoder()
-{
-	ResetJogEncoderCount();
-	lastJogCommandPosition = 0.0;
-}
 
 //--------------------------------------------------------------------------------------
 // ReadJogResetButton()

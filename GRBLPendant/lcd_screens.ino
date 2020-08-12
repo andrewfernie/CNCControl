@@ -284,6 +284,14 @@ void DisplayJogScreen()
 	len = strlen(tmpStr);
 	JogLCD.setCursor(0, 2);
 	JogLCD.print(tmpStr);
+	
+	// GRBL command counter - for debug only, but useful when debugging communication problems.
+#ifdef DEBUG
+	sprintf(tmpStr, "%2.2d", grblCommandCount);
+	len = strlen(tmpStr);
+	JogLCD.setCursor((LCDCols - len), 2);
+	JogLCD.print(tmpStr);
+#endif
 
 	// ---------
 	// Fourth Row

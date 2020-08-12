@@ -29,7 +29,8 @@ void ProcessKey(char key)
 
 	case '2':
 		// Jog +
-		ResetJogEncoder();
+		jogEncoder.Reset();
+		lastJogCommandPosition = 0.0;
 		if (pendantMode == PendantModes::Control)
 		{
 			SendJogCommand(+1.0 * getJogSize());
@@ -38,7 +39,8 @@ void ProcessKey(char key)
 
 	case '3':
 		// Jog -
-		ResetJogEncoder();
+		jogEncoder.Reset();
+		lastJogCommandPosition = 0.0;
 		if (pendantMode == PendantModes::Control)
 		{
 			SendJogCommand(-1.0 * getJogSize());
@@ -47,7 +49,8 @@ void ProcessKey(char key)
 
 	case '4':
 		enableAdjustableJogSize = true;
-		ResetJogEncoder();
+		jogEncoder.Reset();
+		lastJogCommandPosition = 0.0;
 		break;
 
 	case '5':
@@ -60,7 +63,8 @@ void ProcessKey(char key)
 			pendantMode = PendantModes::Control;
 		}
 
-		ResetJogEncoder();
+		jogEncoder.Reset();
+		lastJogCommandPosition = 0.0;
 
 		SendGRBLCommandSoftReset();
 		ResetGRBLCommandCount();
@@ -87,7 +91,8 @@ void ProcessKey(char key)
 
 	case '8':
 		incrementJogSizeIndex();
-		ResetJogEncoder();
+		jogEncoder.Reset();
+		lastJogCommandPosition = 0.0;
 		break;
 
 	case '9':
@@ -117,7 +122,8 @@ void ProcessKey(char key)
 
 	case 'B':
 		setJogSizeDefault();
-		ResetJogEncoder();
+		jogEncoder.Reset();
+		lastJogCommandPosition = 0.0;
 		break;
 
 	case 'C':
@@ -139,7 +145,8 @@ void ProcessKey(char key)
 
 	case 'F':
 		decrementJogSizeIndex();
-		ResetJogEncoder();
+		jogEncoder.Reset();
+		lastJogCommandPosition = 0.0;
 		break;
 
 	case 'G':
@@ -148,17 +155,20 @@ void ProcessKey(char key)
 
 	case 'H':
 		currentJogAxis = CNCAxis::Z;
-		ResetJogEncoder();
+		jogEncoder.Reset();
+		lastJogCommandPosition = 0.0;
 		break;
 
 	case 'I':
 		currentJogAxis = CNCAxis::Y;
-		ResetJogEncoder();
+		jogEncoder.Reset();
+		lastJogCommandPosition = 0.0;
 		break;
 
 	case 'J':
 		currentJogAxis = CNCAxis::X;
-		ResetJogEncoder();
+		jogEncoder.Reset();
+		lastJogCommandPosition = 0.0;
 		break;
 
 		//default:

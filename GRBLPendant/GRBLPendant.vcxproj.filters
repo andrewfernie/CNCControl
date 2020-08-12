@@ -39,12 +39,18 @@
     <ClInclude Include="lcd_screens.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Encoder2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LCDMenu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="menu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Encoder2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
