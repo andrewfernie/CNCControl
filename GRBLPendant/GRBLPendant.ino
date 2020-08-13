@@ -54,18 +54,14 @@ LiquidCrystal_I2C StatusLCD(StatusLCDAddress, LCD_EN, LCD_RW, LCD_RS, LCD_D4, LC
 // RotaryEncoder
 // -------------
 
-#ifdef UI_ENC_A
-Encoder uiEncoder(UI_ENC_A, UI_ENC_B);
-long uiEncoderPosition = -999;
-#endif
-
-#ifdef UI_ENC_S
+CEncoder2 uiEncoder(UI_ENC_A, UI_ENC_B, -4, UI_ENC_S);
+long uiEncoderPosition = 0;
 bool uiEncoderSwitch = false;
-#endif
+
 
 #ifdef JOG_ENC_A
 
-CEncoder2 jogEncoder(JOG_ENC_A, JOG_ENC_B);
+CEncoder2 jogEncoder(JOG_ENC_A, JOG_ENC_B, 1);
 Bounce jogResetButton = Bounce();
 #endif
 
@@ -281,12 +277,12 @@ void setup()
 	pinMode(DEBUG_ORANGE, OUTPUT);
 	pinMode(DEBUG_YELLOW, OUTPUT);
 
-#ifdef UI_ENC_S
+#ifdef UI_ENC_Sxxx
 	// set Select pin from Rotary Encoder to input
 	pinMode(UI_ENC_S, INPUT);      // sets the encoder select digital pin
 #endif
 
-
+	uiEncoder.SetMinMaxPosition(0, 7);
 
 	  // Setup the first button with an internal pull-up :
 	pinMode(JogResetPin, INPUT_PULLUP);
@@ -421,16 +417,12 @@ void fast_loop()
 	// ---------------------
 	DEBUG_DIGITALWRITE_HIGH(DEBUG_ORANGE);
 
-	uiEncoderPosition = ReadUIEncoder();
-
-
-#ifdef UI_ENC_S
-	uiEncoderSwitch = ReadUIEncoderSwitch();
+	uiEncoderPosition = uiEncoder.GetPosition();
+	uiEncoderSwitch = uiEncoder.ReadSwitch();
 
 	if (uiEncoderSwitch)
 	{
 	}
-#endif
 
 	if (!ReadJogResetButton())
 	{

@@ -3,25 +3,27 @@
 // 
 #include "Encoder2.h"
 
-CEncoder2::CEncoder2(uint8_t pin1, uint8_t pin2) :Encoder{ pin1, pin2 }
+CEncoder2::CEncoder2(uint8_t pin1, uint8_t pin2, int8_t divider) :Encoder{ pin1, pin2 }
 {
 	m_pinSwitch = 0;
 	m_enableSwitch = false;
+	m_divider = divider;
 	Init();
 }
 
-CEncoder2::CEncoder2(uint8_t pin1, uint8_t pin2, uint8_t pin_sw) : Encoder{ pin1, pin2 }
+CEncoder2::CEncoder2(uint8_t pin1, uint8_t pin2, int8_t divider, uint8_t pin_sw) : Encoder{ pin1, pin2 }
 {
 	m_pinSwitch = pin_sw;
 	m_enableSwitch = true;
+	m_divider = divider;
 	pinMode(pin_sw, INPUT);      // sets the encoder select digital pin
 	Init();
 }
 
 void CEncoder2::Init()
 {
-	m_scale = 1.0;
-	m_offset = 0.0;
+	SetScaleOffset(1.0, 0.0);
+	SetMinMaxPosition(-999999, 999999);
 	Reset();
 }
 
@@ -32,7 +34,18 @@ long CEncoder2::GetPosition()
 {
 	m_lastCount = m_count;
 
-	m_count = read();
+	m_count = read() / m_divider;
+
+	if (m_count > m_maximumPosition)
+	{
+		m_count = m_maximumPosition;
+		write(m_count * m_divider);
+	}
+	else if (m_count < m_minimumPosition)
+	{
+		m_count = m_minimumPosition;
+		write(m_count * m_divider);
+	}
 
 	if ((m_count - m_lastCount) > m_directionThreshold)
 		m_direction = 1;
@@ -95,4 +108,16 @@ void CEncoder2::Reset()
 int8_t CEncoder2::GetDirection()
 {
 	return m_direction;
+}
+
+void CEncoder2::SetMinMaxPosition(long minPos, long maxPos)
+{
+	m_minimumPosition = minPos;
+	m_maximumPosition = maxPos;
+}
+
+void CEncoder2::SetScaleOffset(float scale, float offset)
+{
+	m_scale = scale;
+	m_offset = offset;
 }

@@ -25,7 +25,7 @@ void Menu::Draw()
 
 	long             menuOffset;
 
-	menuOffset = (*pEncoderPosition)/4;
+	menuOffset = (*pEncoderPosition);
 
 	menuOffset = max(0, min(menuOffset, 7 - LCDRows));
 

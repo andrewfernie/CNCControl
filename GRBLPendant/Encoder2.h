@@ -23,12 +23,15 @@ protected:
 	uint8_t m_enableSwitch;
 	float m_scale;
 	float m_offset;
+	int8_t m_divider;
 
 	const int8_t m_directionThreshold = 5;
+	long m_minimumPosition;
+	long m_maximumPosition;
 
 public:
-	CEncoder2(uint8_t pin1, uint8_t pin2);
-	CEncoder2(uint8_t pin1, uint8_t pin2, uint8_t pin_sw);
+	CEncoder2(uint8_t pin1, uint8_t pin2, int8_t divider);
+	CEncoder2(uint8_t pin1, uint8_t pin2, int8_t divider, uint8_t pin_sw);
 	void Init();
 	long GetPosition();
 	long GetLastPosition();
@@ -36,6 +39,8 @@ public:
 	float GetLastScaledPosition();
 	void SetScaledPosition(float pos);
 	void SetLastScaledPosition(float pos);
+	void SetMinMaxPosition(long minPos, long maxPos);
+	void SetScaleOffset(float scale, float offset);
 	int8_t GetDirection();
 	bool ReadSwitch();
 	void Reset();
