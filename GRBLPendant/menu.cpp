@@ -5,11 +5,12 @@
 #include "menu.h"
 #include "config.h"
 
-Menu::Menu(MenuParameterItem pMenuParameters[], LiquidCrystal_I2C* panel, long *pEncoderValue)
+Menu::Menu(MenuParameterItem pMenuParameters[], int numItems, LiquidCrystal_I2C* panel, long *pEncoderValue)
 {
 	pParameters = pMenuParameters;
 	pMenuPanel = panel;
 	pEncoderPosition = pEncoderValue;
+	m_NumMenuItems = numItems;
 }
 
 
@@ -27,7 +28,7 @@ void Menu::Draw()
 
 	menuOffset = (*pEncoderPosition);
 
-	menuOffset = max(0, min(menuOffset, 7 - LCDRows));
+	menuOffset = max(0, min(menuOffset, m_NumMenuItems - LCDRows));
 
 
 
@@ -38,9 +39,15 @@ void Menu::Draw()
 		pMenuPanel->print(LCDEmpty);  // erase the line
 		pMenuPanel->setCursor(0, i);
 
-		strncpy(lineBuf, ((*(pParameters + paramIndex)).name), MenuTextLength);
+		if (paramIndex == *pEncoderPosition)
+			strcpy(lineBuf, ">");
+		else
+		    strcpy(lineBuf, " ");
 
-		switch (getType(i)) {
+
+		strncat(lineBuf, ((*(pParameters + paramIndex)).name), MenuTextLength);
+
+		switch (getType(paramIndex)) {
 		case MenuParameterType::ParamStatic:
 			pMenuPanel->print(lineBuf);
 			break;
@@ -217,4 +224,23 @@ void Menu::printFloat(char* outBuffer, float val, byte precision)
 		sprintf(tmpBuf, "%d", frac);
 		strcat(outBuffer, tmpBuf);
 	}
+}
+
+int Menu::GetNumMenuItems()
+{
+	return m_NumMenuItems;
+}
+
+void Menu::EditItem(int itemIndex)
+{
+	pMenuPanel->clear();
+
+	// Edit the selected item
+
+	Draw();				// Cleanup the screen
+};
+
+int	Menu::GetCurrentItemIndex()
+{
+
 }

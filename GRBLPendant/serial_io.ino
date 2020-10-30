@@ -13,9 +13,9 @@
 // Get data from GRBL ==> PC
 void SerialIOGRBL()
 {
-	while (grblSerial.available())
+	while (GrblCommAvailable())
 	{
-		char c = grblSerial.read();
+		char c = GrblCommRead();
 
 		// wait for a complete line 
 		// and parse it
@@ -44,7 +44,7 @@ void SerialIOGS()
 		
 		if (c == 0x18)   //  ctrl-x (Soft-Reset), just send it on. 
 		{
-			grblSerial.write(c);
+			GrblCommWriteChar(c);
 
 			// flush the buffer
 			pc = 0;
@@ -53,15 +53,15 @@ void SerialIOGS()
 		}
 		else if (c == '?')           //Status Report Query, just send it on. 
 		{
-			grblSerial.write(c);
+			GrblCommWriteChar(c);
 		}
 		else if (c == '~')           //Cycle Start / Resume, just send it on. 
 		{
-			grblSerial.write(c);
+			GrblCommWriteChar(c);
 		}
 		else if (c == '!')           //Feed Hold, just send it on. 
 		{
-			grblSerial.write(c);
+			GrblCommWriteChar(c);
 		}
 		else if (c == '\n')
 		{
@@ -85,7 +85,7 @@ void SerialIOGS()
 
 void SendGRBLCommand_NoCount(char* command)
 {
-	grblSerial.print(command);
+	GrblCommPrintCharArray(command);
 }
 void SendGRBLCommand(char* command)
 {
@@ -94,7 +94,7 @@ void SendGRBLCommand(char* command)
 }
 void SendGRBLCommand_NoCount(const char command[])
 {
-	grblSerial.print(command);
+	GrblCommPrintCharArray(command);
 }
 
 void SendGRBLCommand(const char command[])
@@ -638,4 +638,52 @@ void spindle_on(int speed)
 void spindle_off()
 {
 	SendGRBLCommand("M5\n");
+}
+
+size_t GrblCommPrintCharArray(const char* charArrayIn)
+{
+	size_t returnValue;
+
+	if (grblCommDevice == GRBL_COMM_UART)
+		returnValue = grblSerial.print(charArrayIn);
+	else
+		returnValue = grblUSBSerial.print(charArrayIn);
+
+	return returnValue;
+}
+
+size_t GrblCommWriteChar(const char charIn)
+{
+	size_t returnValue;
+
+	if (grblCommDevice == GRBL_COMM_UART)
+		returnValue = grblSerial.write(charIn);
+	else
+		returnValue = grblUSBSerial.write(charIn);
+
+	return returnValue;
+}
+
+int GrblCommRead()
+{
+	int returnValue;
+
+	if (grblCommDevice == GRBL_COMM_UART)
+		returnValue = grblSerial.read();
+	else
+		returnValue = grblUSBSerial.read();
+
+	return returnValue;
+}
+
+int GrblCommAvailable()
+{
+	int returnValue;
+
+	if (grblCommDevice == GRBL_COMM_UART)
+		returnValue = grblSerial.available();
+	else
+		returnValue = grblUSBSerial.available();
+
+	return returnValue;
 }

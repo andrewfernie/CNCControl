@@ -34,7 +34,7 @@ struct MenuParameterItem
 class Menu
 {
 public:
-    Menu(MenuParameterItem menuParameters[], LiquidCrystal_I2C* panel, long* encoderValue);
+    Menu(MenuParameterItem menuParameters[], int numItems, LiquidCrystal_I2C* panel, long* encoderValue);
 
 
     /// Event codes used by handleEvent and to explain to the superclass
@@ -57,6 +57,8 @@ public:
 
     // Draw the page
     void     Draw();
+
+    void     EditItem(int itemIndex);
 
     ///// initialise the page system, draw the first page
     /////
@@ -97,11 +99,14 @@ public:
     void			setValueFloat(uint8_t index, float value);
     uint8_t			setValueFloatFromName(char* nameIn, float valueIn);
     void            printFloat(char* outBuffer, float val, byte precision);
+    int             GetNumMenuItems();
+    int             GetCurrentItemIndex();
 
 protected:
     MenuParameterItem *pParameters;
     LiquidCrystal_I2C* pMenuPanel;
     long* pEncoderPosition;
+    int m_NumMenuItems;
     
 //    //TouchButton* defaultPageButtonArray;				// The default buttons for this page
 //

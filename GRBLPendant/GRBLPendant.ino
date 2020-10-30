@@ -17,6 +17,8 @@
 //
 
 
+#include <USBHost_t36.h>
+#include <antplusdefs.h>
 #include <Bounce2.h>
 #include <Keypad.h>
 #include <Key.h>
@@ -34,13 +36,36 @@
 // Defines
 // ===============================================
 //
-constexpr auto ProgramVersion = 0.27;
+constexpr auto ProgramVersion = 0.28;
 
 //
 // ===============================================
 // Inits
 // ===============================================
 //
+// -------------------------
+// Inits for USB Host
+// -------------------------
+const uint32_t USBBAUD = 115200;
+const uint32_t USBFORMAT = USBHOST_SERIAL_8N1;
+
+USBHost grblUSB;
+USBHub hub1(grblUSB);
+USBHub hub2(grblUSB);
+USBHIDParser hid1(grblUSB);
+USBHIDParser hid2(grblUSB);
+USBHIDParser hid3(grblUSB);
+USBSerial grblUSBSerial(grblUSB);
+
+USBDriver* drivers[] = { &hub1, &hub2, &hid1, &hid2, &hid3, &grblUSBSerial };
+#define CNT_DEVICES (sizeof(drivers)/sizeof(drivers[0]))
+const char* driver_names[CNT_DEVICES] = { "Hub1", "Hub2",  "HID1", "HID2", "HID3", "grblUSBSerial1" };
+bool driver_active[CNT_DEVICES] = { false, false, false, false };
+
+const uint8_t GRBL_COMM_UART = 0;
+const uint8_t GRBL_COMM_USB = 1;
+uint8_t grblCommDevice = GRBL_COMM_USB;
+
 
 // -------------------------
 // Inits for LCD control
@@ -55,6 +80,7 @@ LiquidCrystal_I2C StatusLCD(StatusLCDAddress, LCD_EN, LCD_RW, LCD_RS, LCD_D4, LC
 // -------------
 
 CEncoder2 uiEncoder(UI_ENC_A, UI_ENC_B, -4, UI_ENC_S);
+
 long uiEncoderPosition = 0;
 bool uiEncoderSwitch = false;
 
@@ -247,6 +273,8 @@ int menuVarDummy2;
 uint8_t menuVarDummy3;
 uint8_t menuVarDummy4;
 
+uint8_t menuEditMode;
+
 struct MenuParameterItem menuParameters[] = {
 	{ParamInMm,  "Units      ",  0,     0.,     0., (void*)&menuVarUnits},
 	{ParamFloat, "Jog Spd. XY",  0,     0.,   100., (void*)&menuJogSpeedXY},
@@ -257,10 +285,8 @@ struct MenuParameterItem menuParameters[] = {
 	{ParamYesNo, "Dummy 4    ",  0,     0.,     0., (void*)&menuVarDummy4}
 };
 
-Menu menuObject(menuParameters, &StatusLCD, &uiEncoderPosition);
+Menu menuObject(menuParameters, sizeof(menuParameters) / sizeof(MenuParameterItem), &StatusLCD, &uiEncoderPosition);
 
-
-//
 // ===============================================
 // Main
 // ===============================================
@@ -321,7 +347,13 @@ void setup()
 	JogLCD.setCursor(0, 2); // letter, row
 	JogLCD.print(F("Jog LCD "));
 
+	uiEncoder.SetMinMaxPosition(0, menuObject.GetNumMenuItems() - 1);
+
 	delay(2000);
+
+	// open USB host port to GRBL
+	grblUSB.begin();
+	grblUSBSerial.begin(USBBAUD, USBFORMAT);
 
 	// open serial port to G Code senser 
 	gsSerial.begin(GSSerialSpeed);
@@ -329,7 +361,7 @@ void setup()
 	// open serial port to GRBL
 	grblSerial.begin(GRBLSerialSpeed);
 	// reset grbl device (ctrl-X) for Universal Gcode Sender
-	grblSerial.write(0x18);
+	GrblCommWriteChar(0x18);
 
 
 	StatusLCD.clear();
@@ -419,9 +451,21 @@ void fast_loop()
 
 	uiEncoderPosition = uiEncoder.GetPosition();
 	uiEncoderSwitch = uiEncoder.ReadSwitch();
-
+	
 	if (uiEncoderSwitch)
 	{
+		if (menuMode == MenuModes::Menu)
+		{
+			if (!menuEditMode)
+			{
+				menuObject.EditItem(uiEncoderPosition);
+				menuEditMode = false;
+			}
+		}
+		else
+		{
+			menuEditMode = false;
+		}
 	}
 
 	if (!ReadJogResetButton())

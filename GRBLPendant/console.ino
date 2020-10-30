@@ -71,7 +71,7 @@ void setinterval(int ms)
 void resetDevice(int n)
 {
 	debugSerial.println(F("Reset device ... "));
-	grblSerial.write(0x18);
+	GrblCommWriteChar(0x18);
 	delay(100);
 	//asm volatile ("jmp 0x0000");
 }
