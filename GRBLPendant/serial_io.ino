@@ -268,7 +268,6 @@ void ParseGrblLine(char* line_in)
 		gsSerial.print("\n");
 	}
 
-
 }
 
 
@@ -619,7 +618,6 @@ void SendJogCommand(float displacement)
 
 	SendGRBLCommand(commandStr);
 
-//	DEBUG_PRINTLN(commandStr);
 }
 
 void spindle_on(int speed)
@@ -644,11 +642,11 @@ size_t GrblCommPrintCharArray(const char* charArrayIn)
 {
 	size_t returnValue;
 
-	if (grblCommDevice == GRBL_COMM_UART)
+#ifdef GRBL_COMM_UART
 		returnValue = grblSerial.print(charArrayIn);
-	else
+#else
 		returnValue = grblUSBSerial.print(charArrayIn);
-
+#endif
 	return returnValue;
 }
 
@@ -656,11 +654,11 @@ size_t GrblCommWriteChar(const char charIn)
 {
 	size_t returnValue;
 
-	if (grblCommDevice == GRBL_COMM_UART)
+#ifdef GRBL_COMM_UART
 		returnValue = grblSerial.write(charIn);
-	else
+#else
 		returnValue = grblUSBSerial.write(charIn);
-
+#endif
 	return returnValue;
 }
 
@@ -668,10 +666,11 @@ int GrblCommRead()
 {
 	int returnValue;
 
-	if (grblCommDevice == GRBL_COMM_UART)
+#ifdef GRBL_COMM_UART
 		returnValue = grblSerial.read();
-	else
+#else
 		returnValue = grblUSBSerial.read();
+#endif
 
 	return returnValue;
 }
@@ -680,10 +679,11 @@ int GrblCommAvailable()
 {
 	int returnValue;
 
-	if (grblCommDevice == GRBL_COMM_UART)
+#ifdef GRBL_COMM_UART
 		returnValue = grblSerial.available();
-	else
+#else
 		returnValue = grblUSBSerial.available();
+#endif
 
 	return returnValue;
 }

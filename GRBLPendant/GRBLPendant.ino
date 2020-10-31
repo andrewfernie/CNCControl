@@ -46,9 +46,8 @@ constexpr auto ProgramVersion = 0.28;
 // -------------------------
 // Inits for USB Host
 // -------------------------
-const uint32_t USBBAUD = 115200;
-const uint32_t USBFORMAT = USBHOST_SERIAL_8N1;
 
+#ifdef GRBL_COMM_USB
 USBHost grblUSB;
 USBHub hub1(grblUSB);
 USBHub hub2(grblUSB);
@@ -61,10 +60,11 @@ USBDriver* drivers[] = { &hub1, &hub2, &hid1, &hid2, &hid3, &grblUSBSerial };
 #define CNT_DEVICES (sizeof(drivers)/sizeof(drivers[0]))
 const char* driver_names[CNT_DEVICES] = { "Hub1", "Hub2",  "HID1", "HID2", "HID3", "grblUSBSerial1" };
 bool driver_active[CNT_DEVICES] = { false, false, false, false };
+#endif
 
-const uint8_t GRBL_COMM_UART = 0;
-const uint8_t GRBL_COMM_USB = 1;
-uint8_t grblCommDevice = GRBL_COMM_USB;
+#ifdef GRBL_COMM_UART
+
+#endif
 
 
 // -------------------------
@@ -125,8 +125,14 @@ char keys[rows][cols] = {
   {'C','D','E','F'},
   {'G','H','I','J'}
 };
+#ifdef TEENSY32
 byte rowPins[rows] = { 14, 15, 16, 17, 12 }; //connect to the row pinouts of the keypad
 byte colPins[cols] = { 20, 21, 22, 23 }; //connect to the column pinouts of the keypad
+#else
+byte rowPins[rows] = { 33, 34, 35, 36, 37 }; //connect to the row pinouts of the keypad
+byte colPins[cols] = { 38, 39, 40, 41 }; //connect to the column pinouts of the keypad
+#endif
+
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, rows, cols);
 
 // ------------
@@ -351,18 +357,22 @@ void setup()
 
 	delay(2000);
 
+#ifdef GRBL_COMM_USB
 	// open USB host port to GRBL
 	grblUSB.begin();
 	grblUSBSerial.begin(USBBAUD, USBFORMAT);
+#endif
 
-	// open serial port to G Code senser 
-	gsSerial.begin(GSSerialSpeed);
-
+#ifdef GRBL_COMM_UART
 	// open serial port to GRBL
 	grblSerial.begin(GRBLSerialSpeed);
+#endif
+
 	// reset grbl device (ctrl-X) for Universal Gcode Sender
 	GrblCommWriteChar(0x18);
-
+	
+	// open serial port to G Code senser 
+	gsSerial.begin(GSSerialSpeed);
 
 	StatusLCD.clear();
 	JogLCD.clear();

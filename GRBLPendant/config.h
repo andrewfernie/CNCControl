@@ -9,19 +9,33 @@
 	#include "WProgram.h"
 #endif
 
+#include <USBHost_t36.h>
+
+// Define one of the following depending on which model of Teensy is being used
+// Changes pin defines and availability of USB Host mode (not supported by Teensy 3.2)
+//#define TEENSY32
+#define TEENSY41
+
 // Normal serial for debug ----------------------------------
 #define debugSerial     Serial3
 constexpr auto DebugSerialSpeed = 115200  ;
-
-// Serial to GRBL
-#define grblSerial      Serial2
-constexpr auto GRBLSerialSpeed = 115200 ;
 
 // G-Code sender. Must be as fast as grbl!
 #define gsSerial        Serial
 constexpr auto GSSerialSpeed = 115200 ;
 
 const int BufferSize = 100;
+
+#ifdef TEENSY41
+#define  GRBL_COMM_USB
+const uint32_t USBBAUD = 115200;
+const uint32_t USBFORMAT = USBHOST_SERIAL_8N1;
+#else
+#define  GRBL_COMM_UART
+// Serial to GRBL
+#define grblSerial      Serial2
+constexpr auto GRBLSerialSpeed = 115200; 
+#endif
 
 // LCD -------------------------------------------
 constexpr auto StatusLCDAddress = 0x26;  // I2C LCD Address
@@ -65,10 +79,17 @@ constexpr auto JogResetPin = 11;
 
 
 // Debug Pins --------------------------------
+#ifdef TEENSY32
 constexpr auto DEBUG_BROWN  = 24;
 constexpr auto DEBUG_RED    = 25;
 constexpr auto DEBUG_ORANGE = 26;
 constexpr auto DEBUG_YELLOW = 27;
+#else
+constexpr auto DEBUG_BROWN = 29;
+constexpr auto DEBUG_RED = 30;
+constexpr auto DEBUG_ORANGE = 31;
+constexpr auto DEBUG_YELLOW = 32; 
+#endif
 
 // EEPROM addresses
 constexpr auto EEPROMButtons = 100;
