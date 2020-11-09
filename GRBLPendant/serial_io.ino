@@ -41,7 +41,7 @@ void SerialIOGS()
 	while (gsSerial.available())
 	{
 		char c = gsSerial.read();
-		
+
 		if (c == 0x18)   //  ctrl-x (Soft-Reset), just send it on. 
 		{
 			GrblCommWriteChar(c);
@@ -68,12 +68,12 @@ void SerialIOGS()
 			// wait for a complete line
 			// and parse it
 			ParsePCCommand(pcserial);
-		
+
 			pc = 0;
 			memset(&pcserial[0], 0, sizeof(pcserial));
 			pcserial[0] = '\0';
 		}
-		else 
+		else
 		{
 			if (pc < BufferSize) {
 				pcserial[pc++] = c;
@@ -147,8 +147,8 @@ void ParsePCCommand(char* line)
 	if (line[0] == ':')
 	{
 		ParseCommandLine(line);
-	} 
-	else 
+	}
+	else
 	{
 		SendGRBLCommand_NoCount(line);  // count will be handled by the newline
 		SendGRBLCommand("\n");
@@ -221,10 +221,10 @@ void ParseGrblLine(char* line_in)
 			gsSerial.print("\n");
 		}
 		DEBUG_PRINTLN(line_in);
-		
+
 		char errCode[3] = { 0,0,0 };
 		errCode[0] = line[6];
-		if(line[7] >= '0' && line[7]<='9')
+		if (line[7] >= '0' && line[7] <= '9')
 			errCode[1] = line[7];
 
 		errorNumber = atoi(errCode);
@@ -300,7 +300,7 @@ void ParseStatusLine(char* line_in)
 	// State ..
 	temp = strtok(line, delim);
 
-	if(temp != NULL)
+	if (temp != NULL)
 		set_grblState_from_chars(temp);
 	else
 		grblState = GRBLStates::Undefined;
@@ -643,9 +643,9 @@ size_t GrblCommPrintCharArray(const char* charArrayIn)
 	size_t returnValue;
 
 #ifdef GRBL_COMM_UART
-		returnValue = grblSerial.print(charArrayIn);
+	returnValue = grblSerial.print(charArrayIn);
 #else
-		returnValue = grblUSBSerial.print(charArrayIn);
+	returnValue = grblUSBSerial.print(charArrayIn);
 #endif
 	return returnValue;
 }
@@ -655,9 +655,9 @@ size_t GrblCommWriteChar(const char charIn)
 	size_t returnValue;
 
 #ifdef GRBL_COMM_UART
-		returnValue = grblSerial.write(charIn);
+	returnValue = grblSerial.write(charIn);
 #else
-		returnValue = grblUSBSerial.write(charIn);
+	returnValue = grblUSBSerial.write(charIn);
 #endif
 	return returnValue;
 }
@@ -667,9 +667,9 @@ int GrblCommRead()
 	int returnValue;
 
 #ifdef GRBL_COMM_UART
-		returnValue = grblSerial.read();
+	returnValue = grblSerial.read();
 #else
-		returnValue = grblUSBSerial.read();
+	returnValue = grblUSBSerial.read();
 #endif
 
 	return returnValue;
@@ -680,10 +680,81 @@ int GrblCommAvailable()
 	int returnValue;
 
 #ifdef GRBL_COMM_UART
-		returnValue = grblSerial.available();
+	returnValue = grblSerial.available();
 #else
-		returnValue = grblUSBSerial.available();
+	returnValue = grblUSBSerial.available();
 #endif
 
 	return returnValue;
+}
+
+void USBDeviceCheck(uint32_t usbbaud, uint32_t usbformat)
+{
+#ifdef GRBL_COMM_USB
+
+#ifdef USB_COMM_DEBUG
+//	Serial.println("Enter USBDeviceCheck");
+#endif
+
+	grblUSB.Task();
+
+	// Print out information about different devices.
+	for (uint8_t i = 0; i < CNT_DEVICES; i++) 
+	{
+		if (*drivers[i] != driver_active[i]) 
+		{
+			  if (driver_active[i]) 
+			  {
+#ifdef USB_COMM_DEBUG
+				Serial.printf("*** Device %s - disconnected ***\n", driver_names[i]);
+#endif
+				driver_active[i] = false;
+			  }
+			  else
+			  {
+#ifdef USB_COMM_DEBUG
+				  Serial.printf("*** Device %s %x:%x - connected ***\n", driver_names[i], drivers[i]->idVendor(), drivers[i]->idProduct());
+#endif
+				  driver_active[i] = true;
+
+#ifdef USB_COMM_DEBUG
+				  const uint8_t* psz = drivers[i]->manufacturer();
+				  if (psz && *psz)
+				  {
+					  Serial.printf("  manufacturer: %s\n", psz);
+				  }
+#endif
+
+#ifdef USB_COMM_DEBUG
+				  psz = drivers[i]->product();
+				  if (psz && *psz)
+				  {
+					  Serial.printf("  product: %s\n", psz);
+				  }
+#endif
+
+#ifdef USB_COMM_DEBUG
+				  psz = drivers[i]->serialNumber();
+				  if (psz && *psz)
+				  {
+					  Serial.printf("  Serial: %s\n", psz);
+				  }
+#endif
+
+				  // If this is a new Serial device.
+				  if (drivers[i] == &grblUSBSerial)
+				  {
+					  // Lets try first outputting something to our USerial to see if it will go out...
+					  grblUSBSerial.begin(usbbaud, usbformat);
+				  }
+			  }
+		}
+#ifdef USB_COMM_DEBUG
+		else
+		{
+				Serial.printf("  Driver %d, %d\n", i, driver_active[i]);
+		}
+#endif
+	} 
+#endif
 }

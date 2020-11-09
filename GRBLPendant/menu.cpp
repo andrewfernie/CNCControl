@@ -243,4 +243,5 @@ void Menu::EditItem(int itemIndex)
 int	Menu::GetCurrentItemIndex()
 {
 
+	return false;
 }

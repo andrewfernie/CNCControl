@@ -360,7 +360,7 @@ void setup()
 #ifdef GRBL_COMM_USB
 	// open USB host port to GRBL
 	grblUSB.begin();
-	grblUSBSerial.begin(USBBAUD, USBFORMAT);
+//	grblUSBSerial.begin(USBBAUD, USBFORMAT);
 #endif
 
 #ifdef GRBL_COMM_UART
@@ -396,6 +396,8 @@ uint32_t  lastLCDOut = 0;
 void loop()
 {
 	// Jobs
+
+	USBDeviceCheck(USBBAUD, USBFORMAT);
 
 	DEBUG_DIGITALWRITE_HIGH(DEBUG_BROWN);
 	SerialIOGRBL();

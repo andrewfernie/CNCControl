@@ -30,6 +30,7 @@ const int BufferSize = 100;
 #define  GRBL_COMM_USB
 const uint32_t USBBAUD = 115200;
 const uint32_t USBFORMAT = USBHOST_SERIAL_8N1;
+//#define USB_COMM_DEBUG
 #else
 #define  GRBL_COMM_UART
 // Serial to GRBL
