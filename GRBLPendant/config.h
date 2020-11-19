@@ -38,6 +38,12 @@ const uint32_t USBFORMAT = USBHOST_SERIAL_8N1;
 constexpr auto GRBLSerialSpeed = 115200; 
 #endif
 
+// Command parameters
+
+constexpr auto SpindleMaxSpeed = 12000;				// Max speed for spindle when turned on to 100%
+
+constexpr auto SpindleDefaultSpeedPercent = 75;		// Default spindle speed as percentage of SpindleMaxSpeed
+
 // LCD -------------------------------------------
 constexpr auto StatusLCDAddress = 0x26;  // I2C LCD Address
 constexpr auto JogLCDAddress = 0x27;  // I2C LCD Address

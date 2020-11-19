@@ -214,7 +214,10 @@ GRBLCoord grblCoord = GRBLCoord::Undefined;
 char currentTool[] = "   ";
 
 // Feed rate
-float currentFeedRate;
+float currentFeedRate = 0.0;
+
+// Spindle speed
+float spindleSpeed = 0.0;
 
 
 float currentOvFeedRatePercent;  //Override Percent
@@ -356,6 +359,9 @@ void setup()
 	uiEncoder.SetMinMaxPosition(0, menuObject.GetNumMenuItems() - 1);
 
 	delay(2000);
+
+	// Default parameters
+	spindleSpeed = SpindleMaxSpeed * (SpindleDefaultSpeedPercent / 100.0);
 
 #ifdef GRBL_COMM_USB
 	// open USB host port to GRBL

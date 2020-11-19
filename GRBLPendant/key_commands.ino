@@ -105,7 +105,7 @@ void ProcessKey(char key)
 		{
 			if (currentSpindleState == SpindleState::Off)
 			{
-				spindle_on(100);
+				spindle_on((int)spindleSpeed);
 			}
 			else
 			{
