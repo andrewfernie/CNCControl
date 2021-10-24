@@ -203,7 +203,7 @@ enum class CoolantState { Undefined, Mist, Flood, Off };
 CoolantState currentCoolantState = CoolantState::Undefined;
 
 // GRBL controller states
-enum class GRBLStates { Undefined, Idle, Run, Hold, Jog, Alarm, Door, Check, Home, Sleep};
+enum class GRBLStates { Undefined, Idle, Run, Hold, Jog, Alarm, Door, Check, Home, Sleep };
 GRBLStates grblState = GRBLStates::Undefined;
 
 // Co-ordinate system
@@ -224,7 +224,7 @@ float currentOvFeedRatePercent;  //Override Percent
 float currentOvRapidRatePercent;  //Override Percent
 
 char lastMessage[BufferSize];
-unsigned long lastMessageTime=0;
+unsigned long lastMessageTime = 0;
 int  alarmNumber = 0;			// Alarm message number
 unsigned long lastAlarmTime = 0;
 int  errorNumber = 0;			// Error message number
@@ -232,9 +232,9 @@ unsigned long lastErrorTime = 0;
 
 struct AxisData
 {
-	float x;
-	float y;
-	float z;
+    float x;
+    float y;
+    float z;
 };
 AxisData currentPosition;
 
@@ -285,13 +285,13 @@ uint8_t menuVarDummy4;
 uint8_t menuEditMode;
 
 struct MenuParameterItem menuParameters[] = {
-	{ParamInMm,  "Units      ",  0,     0.,     0., (void*)&menuVarUnits},
-	{ParamFloat, "Jog Spd. XY",  0,     0.,   100., (void*)&menuJogSpeedXY},
-	{ParamFloat, "Jog Spd. Z ",  0,     0.,   100., (void*)&menuJogSpeedZ},
-	{ParamFloat, "Dummy 1    ",  2,   -20.,   100., (void*)&menuVarDummy1},
-	{ParamInt,   "Dummy 2    ",  0,  -999.,  1000., (void*)&menuVarDummy2},
-	{ParamOnOff, "Dummy 3    ",  0,     0.,     0., (void*)&menuVarDummy3},
-	{ParamYesNo, "Dummy 4    ",  0,     0.,     0., (void*)&menuVarDummy4}
+    {ParamInMm,  "Units      ",  0,     0.,     0., (void*)&menuVarUnits},
+    {ParamFloat, "Jog Spd. XY",  0,     0.,   100., (void*)&menuJogSpeedXY},
+    {ParamFloat, "Jog Spd. Z ",  0,     0.,   100., (void*)&menuJogSpeedZ},
+    {ParamFloat, "Dummy 1    ",  2,   -20.,   100., (void*)&menuVarDummy1},
+    {ParamInt,   "Dummy 2    ",  0,  -999.,  1000., (void*)&menuVarDummy2},
+    {ParamOnOff, "Dummy 3    ",  0,     0.,     0., (void*)&menuVarDummy3},
+    {ParamYesNo, "Dummy 4    ",  0,     0.,     0., (void*)&menuVarDummy4}
 };
 
 Menu menuObject(menuParameters, sizeof(menuParameters) / sizeof(MenuParameterItem), &StatusLCD, &uiEncoderPosition);
@@ -305,83 +305,83 @@ Menu menuObject(menuParameters, sizeof(menuParameters) / sizeof(MenuParameterIte
 
 void setup()
 {
-	debugSerial.begin(DebugSerialSpeed);   // open serial for debug/status messages
+    debugSerial.begin(DebugSerialSpeed);   // open serial for debug/status messages
 
-	pinMode(DEBUG_BROWN, OUTPUT);
-	pinMode(DEBUG_RED, OUTPUT);
-	pinMode(DEBUG_ORANGE, OUTPUT);
-	pinMode(DEBUG_YELLOW, OUTPUT);
+    pinMode(DEBUG_BROWN, OUTPUT);
+    pinMode(DEBUG_RED, OUTPUT);
+    pinMode(DEBUG_ORANGE, OUTPUT);
+    pinMode(DEBUG_YELLOW, OUTPUT);
 
 #ifdef UI_ENC_Sxxx
-	// set Select pin from Rotary Encoder to input
-	pinMode(UI_ENC_S, INPUT);      // sets the encoder select digital pin
+    // set Select pin from Rotary Encoder to input
+    pinMode(UI_ENC_S, INPUT);      // sets the encoder select digital pin
 #endif
 
-	uiEncoder.SetMinMaxPosition(0, 7);
+    uiEncoder.SetMinMaxPosition(0, 7);
 
-	  // Setup the first button with an internal pull-up :
-	pinMode(JogResetPin, INPUT_PULLUP);
-	// After setting up the button, setup the Bounce instance :
-	jogResetButton.attach(JogResetPin);
-	jogResetButton.interval(5); // interval in ms
+    // Setup the first button with an internal pull-up :
+    pinMode(JogResetPin, INPUT_PULLUP);
+    // After setting up the button, setup the Bounce instance :
+    jogResetButton.attach(JogResetPin);
+    jogResetButton.interval(5); // interval in ms
 
    // init LCD Displays //
 
-	StatusLCD.begin(LCDCols, LCDRows);
-	JogLCD.begin(LCDCols, LCDRows);
+    StatusLCD.begin(LCDCols, LCDRows);
+    JogLCD.begin(LCDCols, LCDRows);
 
-	// This is the serial connect to PC, we get some commands
-	// but we can also print some additional information about this module
-	// and the parser from Client program will ignore this
-	debugSerial.print(F("<GRBLPendant "));
-	debugSerial.print(ProgramVersion);
-	debugSerial.println(F(">"));
-	debugSerial.println(F("<All commands start with a colon ':'>"));
-	debugSerial.println(F("<Call help with ':?'>"));
+    // This is the serial connect to PC, we get some commands
+    // but we can also print some additional information about this module
+    // and the parser from Client program will ignore this
+    debugSerial.print(F("<GRBLPendant "));
+    debugSerial.print(ProgramVersion);
+    debugSerial.println(F(">"));
+    debugSerial.println(F("<All commands start with a colon ':'>"));
+    debugSerial.println(F("<Call help with ':?'>"));
 
 
-	StatusLCD.setCursor(0, 0); // letter, row
-	StatusLCD.print(F("GRBL Pendant "));
-	StatusLCD.print(ProgramVersion);
-	StatusLCD.setCursor(0, 1); // letter, row
-	StatusLCD.print(F("Connect ... "));
-	StatusLCD.setCursor(0, 2); // letter, row
-	StatusLCD.print(F("Status LCD "));
+    StatusLCD.setCursor(0, 0); // letter, row
+    StatusLCD.print(F("GRBL Pendant "));
+    StatusLCD.print(ProgramVersion);
+    StatusLCD.setCursor(0, 1); // letter, row
+    StatusLCD.print(F("Connect ... "));
+    StatusLCD.setCursor(0, 2); // letter, row
+    StatusLCD.print(F("Status LCD "));
 
-	JogLCD.setCursor(0, 0); // letter, row
-	JogLCD.print(F("GRBL Pendant "));
-	JogLCD.print(ProgramVersion);
-	JogLCD.setCursor(0, 1); // letter, row
-	JogLCD.print(F("Connect ... "));
-	JogLCD.setCursor(0, 2); // letter, row
-	JogLCD.print(F("Jog LCD "));
+    JogLCD.setCursor(0, 0); // letter, row
+    JogLCD.print(F("GRBL Pendant "));
+    JogLCD.print(ProgramVersion);
+    JogLCD.setCursor(0, 1); // letter, row
+    JogLCD.print(F("Connect ... "));
+    JogLCD.setCursor(0, 2); // letter, row
+    JogLCD.print(F("Jog LCD "));
 
-	uiEncoder.SetMinMaxPosition(0, menuObject.GetNumMenuItems() - 1);
+    uiEncoder.SetMinMaxPosition(0, menuObject.GetNumMenuItems() - 1);
 
-	delay(2000);
+    delay(2000);
 
-	// Default parameters
-	spindleSpeed = SpindleMaxSpeed * (SpindleDefaultSpeedPercent / 100.0);
+    // Default parameters
+    spindleSpeed = SpindleMaxSpeed * (SpindleDefaultSpeedPercent / 100.0);
 
 #ifdef GRBL_COMM_USB
-	// open USB host port to GRBL
-	grblUSB.begin();
-//	grblUSBSerial.begin(USBBAUD, USBFORMAT);
+    // open USB host port to GRBL
+    grblUSB.begin();
+    //	grblUSBSerial.begin(USBBAUD, USBFORMAT);
 #endif
 
 #ifdef GRBL_COMM_UART
-	// open serial port to GRBL
-	grblSerial.begin(GRBLSerialSpeed);
+    // open serial port to GRBL
+    grblSerial.begin(GRBLSerialSpeed);
 #endif
 
-	// reset grbl device (ctrl-X) for Universal Gcode Sender
-	GrblCommWriteChar(0x18);
-	
-	// open serial port to G Code senser 
-	gsSerial.begin(GSSerialSpeed);
+    // reset grbl device (ctrl-X) for Universal Gcode Sender
+    GrblCommWriteChar(0x18);
 
-	StatusLCD.clear();
-	JogLCD.clear();
+    // open serial port to G Code senser 
+    gsSerial.begin(GSSerialSpeed);
+
+    StatusLCD.clear();
+    JogLCD.clear();
 
 }//SETUP
 
@@ -401,59 +401,59 @@ uint32_t  lastLCDOut = 0;
 
 void loop()
 {
-	// Jobs
+    // Jobs
 
-	USBDeviceCheck(USBBAUD, USBFORMAT);
+    USBDeviceCheck(USBBAUD, USBFORMAT);
 
-	DEBUG_DIGITALWRITE_HIGH(DEBUG_BROWN);
-	SerialIOGRBL();
-	DEBUG_DIGITALWRITE_LOW(DEBUG_BROWN);
-	
-	DEBUG_DIGITALWRITE_HIGH(DEBUG_RED);
-	SerialIOGS();
-	DEBUG_DIGITALWRITE_LOW(DEBUG_RED);
+    DEBUG_DIGITALWRITE_HIGH(DEBUG_BROWN);
+    SerialIOGRBL();
+    DEBUG_DIGITALWRITE_LOW(DEBUG_BROWN);
+
+    DEBUG_DIGITALWRITE_HIGH(DEBUG_RED);
+    SerialIOGS();
+    DEBUG_DIGITALWRITE_LOW(DEBUG_RED);
 
 
-	if (grblCommandCount != grbl_last_command_count)
-	{
-		//DEBUG_PRINT("Command Count:");
-		//DEBUG_PRINTLN(grblCommandCount);
-		grbl_last_command_count = grblCommandCount;
-	}
+    if (grblCommandCount != grbl_last_command_count)
+    {
+        //DEBUG_PRINT("Command Count:");
+        //DEBUG_PRINTLN(grblCommandCount);
+        grbl_last_command_count = grblCommandCount;
+    }
 
-	// Update the Bounce instance
-	jogResetButton.update();
+    // Update the Bounce instance
+    jogResetButton.update();
 
-	// We want this to execute at 50Hz if possible
-	// -------------------------------------------
-	if (millis() - fast_loopTimer > 19) {
+    // We want this to execute at 50Hz if possible
+    // -------------------------------------------
+    if (millis() - fast_loopTimer > 19) {
 
-		delta_ms_fast_loop = millis() - fast_loopTimer;
+        delta_ms_fast_loop = millis() - fast_loopTimer;
 
-		fast_loopTimer = millis();
+        fast_loopTimer = millis();
 
-		mainLoop_count++;
+        mainLoop_count++;
 
-		// Execute the fast (nominal 50Hz) loop
-		// ------------------------------------
-		fast_loop();
+        // Execute the fast (nominal 50Hz) loop
+        // ------------------------------------
+        fast_loop();
 
-		// Execute the medium loop (internally sub-banded by 5 to a nominal 10Hz)
-		// -----------------------------------------------------------------------
-		medium_loop();
+        // Execute the medium loop (internally sub-banded by 5 to a nominal 10Hz)
+        // -----------------------------------------------------------------------
+        medium_loop();
 
-		// Execute the slow (nominal 1Hz) loop
-		// ------------------------------------
-		counter_one_herz++;
-		if (counter_one_herz >= 50)
-		{
-			one_second_loop();
-			counter_one_herz = 0;
-		}
+        // Execute the slow (nominal 1Hz) loop
+        // ------------------------------------
+        counter_one_herz++;
+        if (counter_one_herz >= 50)
+        {
+            one_second_loop();
+            counter_one_herz = 0;
+        }
 
-		fast_loopTimeStamp = millis();
+        fast_loopTimeStamp = millis();
 
-	}
+    }
 
 }//LOOP
 
@@ -461,213 +461,220 @@ void loop()
 // Main loop
 void fast_loop()
 {
-	long jogPosition = 0;
+    long jogPosition = 0;
 
-	// This is the fast loop
-	// ---------------------
-	DEBUG_DIGITALWRITE_HIGH(DEBUG_ORANGE);
+    // This is the fast loop
+    // ---------------------
+    DEBUG_DIGITALWRITE_HIGH(DEBUG_ORANGE);
 
-	uiEncoderPosition = uiEncoder.GetPosition();
-	uiEncoderSwitch = uiEncoder.ReadSwitch();
-	
-	if (uiEncoderSwitch)
-	{
-		if (menuMode == MenuModes::Menu)
-		{
-			if (!menuEditMode)
-			{
-				menuObject.EditItem(uiEncoderPosition);
-				menuEditMode = false;
-			}
-		}
-		else
-		{
-			menuEditMode = false;
-		}
-	}
+    uiEncoderPosition = uiEncoder.GetPosition();
+    uiEncoderSwitch = uiEncoder.ReadSwitch();
 
-	if (!ReadJogResetButton())
-	{
-		jogPosition = jogEncoder.GetPosition();
-	}
-	else
-	{
-		jogPosition = 0;
-		jogEncoder.Reset();
-	}
+    if (uiEncoderSwitch)
+    {
+        if (menuMode == MenuModes::Menu)
+        {
+            if (!menuEditMode)
+            {
+                menuObject.EditItem(uiEncoderPosition);
+                menuEditMode = false;
+            }
+        }
+        else
+        {
+            menuEditMode = false;
+        }
+    }
+
+    long jogResetButton = ReadJogResetButton();
+
+    if (!jogResetButton)
+    {
+        jogPosition = jogEncoder.GetPosition();
+    }
+    else
+    {
+        jogPosition = 0;
+        jogEncoder.Reset();
+    }
 
 
 #ifdef JOG_ENC_S
-	jogEncoderSwitch = ReadJogEncoderSwitch();
+    jogEncoderSwitch = ReadJogEncoderSwitch();
 
-	if (jogEncoderSwitch)
-	{
-		ResetJogEncoderCount();
-	}
+    if (jogEncoderSwitch)
+    {
+        ResetJogEncoderCount();
+}
 #endif
 
-	if (pendantMode == PendantModes::Control)
-	{
-		float jog_move = float(jogPosition) / JogEncCount * getJogSize();
+    if (pendantMode == PendantModes::Control)
+    {
+        float jog_move;
 
-		if (fabs(jog_move - lastJogCommandPosition) >= 0.001)
-		{
-			if (grblCommandCount < 3)
-			{
-				float jogDelta = jog_move - lastJogCommandPosition;
-				SendJogCommand(jogDelta);
-				lastJogCommandPosition = lastJogCommandPosition + jogDelta;
-			}
-		}
-	}
-	DEBUG_DIGITALWRITE_LOW(DEBUG_ORANGE);
+        if (!jogResetButton)
+            jog_move = float(jogPosition) / JogEncCount * getJogSize();
+        else
+            jog_move = 0.0;
+
+        if (fabs(jog_move - lastJogCommandPosition) >= 0.001)
+        {
+            if (grblCommandCount < 3)
+            {
+                float jogDelta = jog_move - lastJogCommandPosition;
+                SendJogCommand(jogDelta);
+                lastJogCommandPosition = lastJogCommandPosition + jogDelta;
+            }
+        }
+    }
+    DEBUG_DIGITALWRITE_LOW(DEBUG_ORANGE);
 
 }
 
 void medium_loop()
 {
-	// This is the start of the medium loop 
-	// -----------------------------------------
-	// The routine is called at 50Hz, so each of the five subbanded 
-	// blocks is called at 10Hz
+    // This is the start of the medium loop 
+    // -----------------------------------------
+    // The routine is called at 50Hz, so each of the five subbanded 
+    // blocks is called at 10Hz
 
-	char key;
-	DEBUG_DIGITALWRITE_HIGH(DEBUG_YELLOW);
+    char key;
+    DEBUG_DIGITALWRITE_HIGH(DEBUG_YELLOW);
 
-	switch (medium_loopCounter)
-	{
-	case 0:
-		medium_loopCounter++;
+    switch (medium_loopCounter)
+    {
+    case 0:
+        medium_loopCounter++;
 
-		delta_ms_medium_loop = millis() - medium_loopTimer;
-		medium_loopTimer = millis();
+        delta_ms_medium_loop = millis() - medium_loopTimer;
+        medium_loopTimer = millis();
 
-		break;
+        break;
 
-		//---------------------------------------------
-	case 1:
-		medium_loopCounter++;
+        //---------------------------------------------
+    case 1:
+        medium_loopCounter++;
 
-		key = keypad.getKey();
+        key = keypad.getKey();
 
-		if (key != NO_KEY)
-		{
-			//char tmpstr[2];
-			//tmpstr[0] = key;
-			//tmpstr[1] = '\0';
-			//DEBUG_PRINT(tmpstr);
-			ProcessKey(key);
-		}
-		break;
+        if (key != NO_KEY)
+        {
+            //char tmpstr[2];
+            //tmpstr[0] = key;
+            //tmpstr[1] = '\0';
+            //DEBUG_PRINT(tmpstr);
+            ProcessKey(key);
+        }
+        break;
 
-		//------------------------------
-	case 2:
-		medium_loopCounter++;
+        //------------------------------
+    case 2:
+        medium_loopCounter++;
 
-		break;
+        break;
 
-		//--------------------------------------------
-	case 3:
-		medium_loopCounter++;
+        //--------------------------------------------
+    case 3:
+        medium_loopCounter++;
 
-		break;
+        break;
 
-		// This case controls the slow loop
-		//---------------------------------
-	case 4:
-		medium_loopCounter = 0;
+        // This case controls the slow loop
+        //---------------------------------
+    case 4:
+        medium_loopCounter = 0;
 
-		slow_loop();
+        slow_loop();
 
-		break;
-	}
-	DEBUG_DIGITALWRITE_LOW(DEBUG_YELLOW);
+        break;
+    }
+    DEBUG_DIGITALWRITE_LOW(DEBUG_YELLOW);
 
 }
 
 void slow_loop()
 {
-	// This is the slow (2Hz) loop pieces
-	//----------------------------------------
-	// The routine is called at 10Hz, so each of the five subbanded 
-	// blocks is called at 2Hz
+    // This is the slow (2Hz) loop pieces
+    //----------------------------------------
+    // The routine is called at 10Hz, so each of the five subbanded 
+    // blocks is called at 2Hz
 
 
-	switch (slow_loopCounter) {
-	case 0:
-		slow_loopCounter++;
+    switch (slow_loopCounter) {
+    case 0:
+        slow_loopCounter++;
 
-		delta_ms_slow_loop = millis() - slow_loopTimer;
-		slow_loopTimer = millis();
+        delta_ms_slow_loop = millis() - slow_loopTimer;
+        slow_loopTimer = millis();
 
-		if (menuMode == MenuModes::Status)
-			DisplayState();
-		else
-			menuObject.Draw();
+        if (menuMode == MenuModes::Status)
+            DisplayState();
+        else
+            menuObject.Draw();
 
-		break;
+        break;
 
-	case 1:
-		slow_loopCounter++;
+    case 1:
+        slow_loopCounter++;
 
-		DisplayJogScreen();
+        DisplayJogScreen();
 
-		break;
+        break;
 
-	case 2:
-		slow_loopCounter++;
+    case 2:
+        slow_loopCounter++;
 
-		if ((pendantMode == PendantModes::Control) && (millis() - lastStatusRXTime > 1000))
-		{
-			SendGRBLCommand_NoCount("?");
-		}
-		break;
+        if ((pendantMode == PendantModes::Control) && (millis() - lastStatusRXTime > 1000))
+        {
+            SendGRBLCommand_NoCount("?");
+        }
+        break;
 
-	case 3:
-		slow_loopCounter++;
+    case 3:
+        slow_loopCounter++;
 
-		if ((pendantMode == PendantModes::Control) && (millis() - lastStateRXTime > 1000))
-		{
-			SendGRBLCommand("$G\n");
-		}
+        if ((pendantMode == PendantModes::Control) && (millis() - lastStateRXTime > 1000))
+        {
+            SendGRBLCommand("$G\n");
+        }
 
-		break;
+        break;
 
-	case 4:
-		slow_loopCounter = 0;
+    case 4:
+        slow_loopCounter = 0;
 
-//		DEBUG_PRINTLN(ReadUIEncoder());
+        //		DEBUG_PRINTLN(ReadUIEncoder());
 
-//      if (ReadUIEncoderSwitch())
-//	       DEBUG_PRINTLN("TRUE");
-//      else
-//	       DEBUG_PRINTLN("FALSE");
+        //      if (ReadUIEncoderSwitch())
+        //	       DEBUG_PRINTLN("TRUE");
+        //      else
+        //	       DEBUG_PRINTLN("FALSE");
 
-		break;
-	}
+        break;
+    }
 
 }
 
 void one_second_loop()
 {
-	if (pendantMode == PendantModes::Control)
-	{
-		if (grblState == GRBLStates::Idle)
-		{
-			if (millis() - lastIdleTimeoutCheck > 5000)
-			{
-				ResetGRBLCommandCount();
-			}
-		}
-		else
-		{
-			lastIdleTimeoutCheck = millis();
-		}
-	}
-	else
-	{
-		grblCommandCount = 0;
-	}
+    if (pendantMode == PendantModes::Control)
+    {
+        if (grblState == GRBLStates::Idle)
+        {
+            if (millis() - lastIdleTimeoutCheck > 5000)
+            {
+                ResetGRBLCommandCount();
+            }
+        }
+        else
+        {
+            lastIdleTimeoutCheck = millis();
+        }
+    }
+    else
+    {
+        grblCommandCount = 0;
+    }
 }
 
 // ---------- Subroutines -----------
@@ -679,127 +686,127 @@ void one_second_loop()
 //
 char* split(char* string, char* delimiter, int index)
 {
-	char* ptr;
+    char* ptr;
 
-	char buffer[BufferSize];
-	strcpy(buffer, string);
+    char buffer[BufferSize];
+    strcpy(buffer, string);
 
-	// init and create first cut
-	ptr = strtok(buffer, delimiter);
-	int x = 0;
-	while (ptr != NULL) {
-		if (x++ >= index)
-			break;
-		// next one
-		ptr = strtok(NULL, delimiter);
-	}
+    // init and create first cut
+    ptr = strtok(buffer, delimiter);
+    int x = 0;
+    while (ptr != NULL) {
+        if (x++ >= index)
+            break;
+        // next one
+        ptr = strtok(NULL, delimiter);
+    }
 
-	return ptr;
+    return ptr;
 }
 
 
 void set_grblState_from_chars(char* tmp)
 {
-	if (strcmp(tmp, "Idle") == 0)    grblState = GRBLStates::Idle;
-	if (strcmp(tmp, "Run") == 0)     grblState = GRBLStates::Run;
-	if (strcmp(tmp, "Hold") == 0)    grblState = GRBLStates::Hold;
-	if (strcmp(tmp, "Jog") == 0)     grblState = GRBLStates::Jog;
-	if (strcmp(tmp, "Alarm") == 0)   grblState = GRBLStates::Alarm;
-	if (strcmp(tmp, "Door") == 0)    grblState = GRBLStates::Door;
-	if (strcmp(tmp, "Check") == 0)   grblState = GRBLStates::Check;
-	if (strcmp(tmp, "Home") == 0)    grblState = GRBLStates::Home;
-	if (strcmp(tmp, "Sleep") == 0)   grblState = GRBLStates::Sleep;
+    if (strcmp(tmp, "Idle") == 0)    grblState = GRBLStates::Idle;
+    if (strcmp(tmp, "Run") == 0)     grblState = GRBLStates::Run;
+    if (strcmp(tmp, "Hold") == 0)    grblState = GRBLStates::Hold;
+    if (strcmp(tmp, "Jog") == 0)     grblState = GRBLStates::Jog;
+    if (strcmp(tmp, "Alarm") == 0)   grblState = GRBLStates::Alarm;
+    if (strcmp(tmp, "Door") == 0)    grblState = GRBLStates::Door;
+    if (strcmp(tmp, "Check") == 0)   grblState = GRBLStates::Check;
+    if (strcmp(tmp, "Home") == 0)    grblState = GRBLStates::Home;
+    if (strcmp(tmp, "Sleep") == 0)   grblState = GRBLStates::Sleep;
 }
 
 float getJogRate()
 {
-	return jogRate[currentJogRateIndex];
+    return jogRate[currentJogRateIndex];
 }
 
 uint8_t setJogRateIndex(uint8_t index)
 {
-	currentJogRateIndex = max(0, min(index, maxJogRateIndex));
-	return currentJogRateIndex;
+    currentJogRateIndex = max(0, min(index, maxJogRateIndex));
+    return currentJogRateIndex;
 }
 
 uint8_t setJogRateDefault()
 {
-	currentJogRateIndex = defaultJogRateIndex;
-	return currentJogRateIndex;
+    currentJogRateIndex = defaultJogRateIndex;
+    return currentJogRateIndex;
 }
 
 uint8_t incrementJogRateIndex()
 {
-	if (currentJogRateIndex < maxJogRateIndex)
-	{ 
-		currentJogRateIndex++;
-	}
-	return currentJogRateIndex;
+    if (currentJogRateIndex < maxJogRateIndex)
+    {
+        currentJogRateIndex++;
+    }
+    return currentJogRateIndex;
 }
 
 uint8_t decrementJogRateIndex()
 {
-	if (currentJogRateIndex > 0)
-	{
-		currentJogRateIndex--;
-	}
-	return currentJogRateIndex;
+    if (currentJogRateIndex > 0)
+    {
+        currentJogRateIndex--;
+    }
+    return currentJogRateIndex;
 }
 
 
 float getJogSize()
 {
-	return jogSize[currentJogSizeIndex];
+    return jogSize[currentJogSizeIndex];
 }
 
 uint8_t setJogSizeIndex(uint8_t index)
 {
-	currentJogSizeIndex = max(0, min(index, maxJogSizeIndex));
-	enableAdjustableJogSize = false;
-	return currentJogSizeIndex;
+    currentJogSizeIndex = max(0, min(index, maxJogSizeIndex));
+    enableAdjustableJogSize = false;
+    return currentJogSizeIndex;
 }
 
 uint8_t setJogSizeDefault()
 {
-	currentJogSizeIndex = defaultJogSizeIndex;
-	enableAdjustableJogSize = false;
-	return currentJogSizeIndex;
+    currentJogSizeIndex = defaultJogSizeIndex;
+    enableAdjustableJogSize = false;
+    return currentJogSizeIndex;
 }
 
 uint8_t incrementJogSizeIndex()
 {
-	if (currentJogSizeIndex < maxJogSizeIndex)
-	{
-		currentJogSizeIndex++;
-	}
-	enableAdjustableJogSize = false;
-	return currentJogSizeIndex;
+    if (currentJogSizeIndex < maxJogSizeIndex)
+    {
+        currentJogSizeIndex++;
+    }
+    enableAdjustableJogSize = false;
+    return currentJogSizeIndex;
 }
 
 uint8_t decrementJogSizeIndex()
 {
-	if (currentJogSizeIndex > 0)
-	{
-		currentJogSizeIndex--;
-	}
-	enableAdjustableJogSize = false;
-	return currentJogSizeIndex;
+    if (currentJogSizeIndex > 0)
+    {
+        currentJogSizeIndex--;
+    }
+    enableAdjustableJogSize = false;
+    return currentJogSizeIndex;
 }
 
 uint32_t freeMem()
 {
-	// for Teensy 3.2
-	uint32_t stackTop;
-	uint32_t heapTop;
+    // for Teensy 3.2
+    uint32_t stackTop;
+    uint32_t heapTop;
 
-	// current position of the stack.
-	stackTop = (uint32_t)&stackTop;
+    // current position of the stack.
+    stackTop = (uint32_t)&stackTop;
 
-	// current position of heap.
-	void* hTop = malloc(1);
-	heapTop = (uint32_t)hTop;
-	free(hTop);
+    // current position of heap.
+    void* hTop = malloc(1);
+    heapTop = (uint32_t)hTop;
+    free(hTop);
 
-	// The difference is (approximately) the free, available ram.
-	return stackTop - heapTop;
+    // The difference is (approximately) the free, available ram.
+    return stackTop - heapTop;
 }
