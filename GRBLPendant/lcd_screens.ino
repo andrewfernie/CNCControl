@@ -16,11 +16,10 @@ void DisplayState()
 	// Display on LCD ...
 	// lcd screen
 	// |------------------|
-	// State  WPos  
-	// 
-	// S1 T1          F1000
-	// MM LIN XY M1
-
+	// State           MMod
+	// Sp. 14000   Feedmm/s
+	// XY Tl#         PMode
+	// ---Alarm Message----
 
 	char tmpStr[LCDCols];
 
@@ -70,86 +69,84 @@ void DisplayState()
 		strcpy(tmpStr, "-----");
 		break;
 	}
-
+	
 	StatusLCD.setCursor(0, 0); // letter, row
 	StatusLCD.print(tmpStr);
-
-	// ----------
-	// Second Row
-	StatusLCD.setCursor(0, 1); // letter, row
-	StatusLCD.print(LCDEmpty);
-	StatusLCD.setCursor(0, 1); // letter, row
-	if (grblState == GRBLStates::Alarm)
-	{
-		StatusLCD.print("Alm:");
-		StatusLCD.print(alarm_message[alarmNumber]);
-	}
-	else
-	{
-		if (millis() - lastErrorTime < 5000)
-			StatusLCD.print(errorMessage[errorNumber]);
-		else
-			StatusLCD.print(lastMessage);
-	}
-
-	// erase message if more than 5s old
-	if (millis() - lastMessageTime > 5000)
-	{
-		for (int i = 0; i <= 20; i++)
-			lastMessage[i] = '\0';
-	}
-
-	// erase message if more than 5s old
-	if (millis() - lastErrorTime > 5000)
-	{
-		errorNumber = 0;
-	}
-
-	// ---------
-	// Third Row
-	StatusLCD.setCursor(0, 2); //third row
 
 	switch (currentMotionMode)
 	{
 	case MotionMode::Rapid:
-		StatusLCD.print("RAP ");
+		strcpy(tmpStr, "RAP ");
 		break;
 	case MotionMode::Linear:
-		StatusLCD.print("LIN ");
+		strcpy(tmpStr, "LIN ");
 		break;
 	case MotionMode::CW:
-		StatusLCD.print("CW  ");
+		strcpy(tmpStr, "CW  ");
 		break;
 	case MotionMode::CCW:
-		StatusLCD.print("CCW ");
+		strcpy(tmpStr, "CCW ");
 		break;
 	case MotionMode::Probe_2:
-		StatusLCD.print("PRB2");
+		strcpy(tmpStr, "PRB2");
 		break;
 	case MotionMode::Probe_3:
-		StatusLCD.print("PRB3");
+		strcpy(tmpStr, "PRB3");
 		break;
 	case MotionMode::Probe_4:
-		StatusLCD.print("PRB4");
+		strcpy(tmpStr, "PRB4");
 		break;
 	case MotionMode::Probe_5:
-		StatusLCD.print("PRB5");
+		strcpy(tmpStr, "PRB5");
 		break;
 	default:
-		StatusLCD.print("--- ");
+		strcpy(tmpStr, "----");
 	}
 
+	StatusLCD.setCursor((LCDCols - strlen(tmpStr)), 0);
+	StatusLCD.print(tmpStr);
+
+	// ----------
+	// Second Row
+	StatusLCD.setCursor(0, 1); //third row
+
+
+	//sprintf(tmpStr, "Sp.%6d", int(getSpindleRPM()));
+	switch (currentSpindleState)
+	{
+	case SpindleState::Off:
+		sprintf(tmpStr, "Sp.%6d", int(getSpindleRPM()));
+		break;
+
+	case SpindleState::CW:
+		sprintf(tmpStr, "Sp.%6d", int(getSpindleRPM()));
+		break;
+
+	case SpindleState::CCW:
+		sprintf(tmpStr, "Sp.%6d", int(getSpindleRPM()));
+		break;
+
+	case SpindleState::Undefined:
+		sprintf(tmpStr, "Sp.%6d", int(getSpindleRPM()));
+		break;
+
+	default:
+		sprintf(tmpStr, "---------");
+		break;
+	}
+	
+
+	StatusLCD.print(tmpStr);
 
 	// Feed
 	sprintf(tmpStr, "%4.0f", currentFeedRate);
-	StatusLCD.setCursor((LCDCols - strlen(tmpStr) - 4), 2);
+	StatusLCD.setCursor((LCDCols - strlen(tmpStr) - 4), 1);
 	StatusLCD.print(strcat(tmpStr, "mm/s"));
 
+
 	// ---------
-	// Fourth Row
-
-	StatusLCD.setCursor(0, 3);
-
+	// Third Row
+	StatusLCD.setCursor(0, 2); // letter, row
 
 	// Plane
 	switch (currentPlaneSelect)
@@ -193,8 +190,40 @@ void DisplayState()
 		strcpy(tmpStr, "-----");
 	}
 
-	StatusLCD.setCursor((LCDCols - strlen(tmpStr)), 3);
+	StatusLCD.setCursor((LCDCols - strlen(tmpStr)), 2);
 	StatusLCD.print(tmpStr);
+
+	// ---------
+	// Fourth Row
+
+	StatusLCD.setCursor(0, 3); // letter, row
+	StatusLCD.print(LCDEmpty);
+	StatusLCD.setCursor(0, 3); // letter, row
+	if (grblState == GRBLStates::Alarm)
+	{
+		StatusLCD.print("Alm:");
+		StatusLCD.print(alarm_message[alarmNumber]);
+	}
+	else
+	{
+		if (millis() - lastErrorTime < 5000)
+			StatusLCD.print(errorMessage[errorNumber]);
+		else
+			StatusLCD.print(lastMessage);
+	}
+
+	// erase message if more than 5s old
+	if (millis() - lastMessageTime > 5000)
+	{
+		for (int i = 0; i <= 20; i++)
+			lastMessage[i] = '\0';
+	}
+
+	// erase message if more than 5s old
+	if (millis() - lastErrorTime > 5000)
+	{
+		errorNumber = 0;
+	}
 }
 
 
@@ -205,10 +234,10 @@ void DisplayJogScreen()
 	// Display on LCD ...
 	// lcd screen
 	// |------------------|
-	// WPos         555.529
-	// 000.000      000.000
-	// 
-	//
+	// Mntr     mm     WPos 
+	// X00000.00  Y00000.00
+	// Z00000.00    AdjustV
+	// Jog: X 100.0    1000 
 
 	char tmpStr[LCDCols];
 	int len;
@@ -265,14 +294,12 @@ void DisplayJogScreen()
 
 	// X position
 	sprintf(tmpStr, "X%8.2f", currentPosition.x);
-	len = strlen(tmpStr);
 	JogLCD.setCursor(0, 1);
 	JogLCD.print(tmpStr);
 
 	// Y position
 	sprintf(tmpStr, "Y%8.2f", currentPosition.y);
-	len = strlen(tmpStr);
-	JogLCD.setCursor((LCDCols - len), 1);
+	JogLCD.setCursor((LCDCols - strlen(tmpStr)), 1);
 	JogLCD.print(tmpStr);
 
 
@@ -285,14 +312,33 @@ void DisplayJogScreen()
 	JogLCD.setCursor(0, 2);
 	JogLCD.print(tmpStr);
 	
-	// GRBL command counter - for debug only, but useful when debugging communication problems.
-#ifdef DEBUG
-//	sprintf(tmpStr, "%2.2d", grblCommandCount);
-	sprintf(tmpStr, "%4.3ld", uiEncoderPosition);
-	len = strlen(tmpStr);
-	JogLCD.setCursor((LCDCols - len), 2);
+	// SetMode
+	switch (currentSetMode)
+	{
+	case SetMode::Feed:
+		strcpy(tmpStr, "   Feed");
+		break;
+	case SetMode::Move:
+		strcpy(tmpStr, "   Move");
+		break;
+	case SetMode::Spindle:
+		strcpy(tmpStr, "Spindle");
+		break;
+	default:
+		strcpy(tmpStr, "-------");
+	}
+	JogLCD.setCursor((LCDCols - strlen(tmpStr)), 2);
 	JogLCD.print(tmpStr);
-#endif
+
+
+	// GRBL command counter - for debug only, but useful when debugging communication problems.
+//#ifdef DEBUG
+////	sprintf(tmpStr, "%2.2d", grblCommandCount);
+//	sprintf(tmpStr, "%4.3ld", uiEncoderPosition);
+//	len = strlen(tmpStr);
+//	JogLCD.setCursor((LCDCols - len), 2);
+//	JogLCD.print(tmpStr);
+//#endif
 
 	// ---------
 	// Fourth Row
@@ -313,7 +359,7 @@ void DisplayJogScreen()
 		JogLCD.print("Jog: Z");
 		break;
 	default:
-		JogLCD.print("-");
+		JogLCD.print("------");
 	}
 
 	// Jog Step
@@ -324,7 +370,7 @@ void DisplayJogScreen()
 	JogLCD.print(tmpStr);
 
 	// Jog Rate
-	sprintf(tmpStr, "%6.1f", getJogRate());
+	sprintf(tmpStr, "%4d", int(getJogRate()));
 	len = strlen(tmpStr);
 	JogLCD.setCursor((LCDCols - len), 3);
 	JogLCD.print(tmpStr);

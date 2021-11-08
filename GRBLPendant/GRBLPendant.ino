@@ -36,7 +36,7 @@
 // Defines
 // ===============================================
 //
-constexpr auto ProgramVersion = 0.28;
+constexpr auto ProgramVersion = 0.29;
 
 //
 // ===============================================
@@ -142,6 +142,12 @@ enum class PendantModes { Monitor, Control };
 PendantModes pendantMode = PendantModes::Monitor;
 
 // ------------
+// Set mode
+// ------------
+enum class SetMode { Feed, Move, Spindle };
+SetMode currentSetMode = SetMode::Move;
+
+// ------------
 // Menu Mode
 // ------------
 enum class MenuModes { Menu, Status };
@@ -194,9 +200,6 @@ ToolLengthOffsetMode currentToolLengthOffsetMode = ToolLengthOffsetMode::Undefin
 enum class ProgramMode { Undefined, Stop, Optional, End, Rewind };
 ProgramMode currentProgramMode = ProgramMode::Undefined;
 
-// Spindle State               M3, M4, M5
-enum class SpindleState { Undefined, CW, CCW, Off };
-SpindleState currentSpindleState = SpindleState::Undefined;
 
 // Coolant State               M7, M8, M9
 enum class CoolantState { Undefined, Mist, Flood, Off };
@@ -238,9 +241,6 @@ struct AxisData
 };
 AxisData currentPosition;
 
-float currentSpindleSpeed;
-float currentOvSpindleSpeedPercent; //Override Percent
-
 AxisData currentWCO;
 
 uint32_t  lastIdleTimeoutCheck = 0;
@@ -257,6 +257,7 @@ uint8_t maxJogSizeIndex = sizeof(jogSize) / sizeof(jogSize[0]) - 1;
 uint8_t currentJogSizeIndex = defaultJogSizeIndex;
 float   adjustableJogSize = 10.0;
 uint8_t enableAdjustableJogSize = false;
+bool stopJogCommand = false;
 
 
 
@@ -264,6 +265,21 @@ float   jogRate[] = { 50.0, 100.0, 200.0, 500.0, 1000.0, 2000.0 }; // values are
 constexpr auto defaultJogRateIndex = 3;
 uint8_t maxJogRateIndex = sizeof(jogRate) / sizeof(jogRate[0]) - 1;
 uint8_t currentJogRateIndex = defaultJogRateIndex;
+
+
+// --------------
+// Jog parameters
+// --------------
+
+// Spindle State               M3, M4, M5
+enum class SpindleState { Undefined, CW, CCW, Off };
+SpindleState currentSpindleState = SpindleState::Off;
+float currentSpindleSpeed = 0.0;
+
+float   spindleRPM[] = { 8000.0, 10000.0, 12000.0, 14000.0, 16000.0, 18000.0, 20000.0, 22000.0, 24000.0 };
+constexpr auto defaultSpindleRPMIndex = 3;
+uint8_t maxSpindleRPMIndex = sizeof(spindleRPM) / sizeof(spindleRPM[0]) - 1;
+uint8_t currentSpindleRPMIndex = defaultSpindleRPMIndex;
 
 int grblCommandCount = 0;
 int grbl_last_command_count = 0;
@@ -360,8 +376,6 @@ void setup()
 
     delay(2000);
 
-    // Default parameters
-    spindleSpeed = SpindleMaxSpeed * (SpindleDefaultSpeedPercent / 100.0);
 
 #ifdef GRBL_COMM_USB
     // open USB host port to GRBL
@@ -495,6 +509,7 @@ void fast_loop()
     else
     {
         jogPosition = 0;
+        lastJogCommandPosition = 0.0;
         jogEncoder.Reset();
     }
 
@@ -505,7 +520,7 @@ void fast_loop()
     if (jogEncoderSwitch)
     {
         ResetJogEncoderCount();
-}
+    }
 #endif
 
     if (pendantMode == PendantModes::Control)
@@ -517,16 +532,23 @@ void fast_loop()
         else
             jog_move = 0.0;
 
-        if (fabs(jog_move - lastJogCommandPosition) >= 0.001)
+        if (stopJogCommand)
         {
-            if (grblCommandCount < 3)
+            lastJogCommandPosition = jog_move;
+        }
+        else {
+            if (fabs(jog_move - lastJogCommandPosition) >= 0.001)
             {
-                float jogDelta = jog_move - lastJogCommandPosition;
-                SendJogCommand(jogDelta);
-                lastJogCommandPosition = lastJogCommandPosition + jogDelta;
+                if (grblCommandCount < 3)
+                {
+                    float jogDelta = jog_move - lastJogCommandPosition;
+                    SendJogCommand(jogDelta);
+                    lastJogCommandPosition = lastJogCommandPosition + jogDelta;
+                }
             }
         }
     }
+    stopJogCommand = false;
     DEBUG_DIGITALWRITE_LOW(DEBUG_ORANGE);
 
 }
@@ -792,6 +814,61 @@ uint8_t decrementJogSizeIndex()
     enableAdjustableJogSize = false;
     return currentJogSizeIndex;
 }
+
+
+
+float getSpindleRPM()
+{
+    return spindleRPM[currentSpindleRPMIndex];
+}
+
+uint8_t setSpindleRPMIndex(uint8_t index)
+{
+    currentSpindleRPMIndex = max(0, min(index, maxSpindleRPMIndex));
+    return currentSpindleRPMIndex;
+}
+
+uint8_t setSpindleRPMDefault()
+{
+    currentSpindleRPMIndex = defaultSpindleRPMIndex;
+    return currentSpindleRPMIndex;
+}
+
+uint8_t incrementSpindleRPMIndex()
+{
+    if (currentSpindleRPMIndex < maxSpindleRPMIndex)
+    {
+        currentSpindleRPMIndex++;
+    }
+    return currentSpindleRPMIndex;
+}
+
+uint8_t decrementSpindleRPMIndex()
+{
+    if (currentSpindleRPMIndex > 0)
+    {
+        currentSpindleRPMIndex--;
+    }
+    return currentSpindleRPMIndex;
+}
+
+uint8_t findClosestSpindleRPMIndex(float rpm)
+{
+    float delta = 9999999.;
+    uint8_t closestIndex = 0;
+
+    for (int i = 0; i <= maxSpindleRPMIndex; i++)
+    {
+        if (fabs(rpm - spindleRPM[i]) < delta)
+        {
+            closestIndex = i;
+        }
+    }
+    closestIndex = max(0, min(closestIndex, maxSpindleRPMIndex));
+
+    return closestIndex;
+}
+
 
 uint32_t freeMem()
 {

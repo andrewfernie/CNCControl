@@ -16,44 +16,85 @@ void ProcessKey(char key)
     switch (key)
 	{
 	case '1':
+		goto_zero(getJogRate());
+		break;
+
+	case '2':
+		zero_axis(currentJogAxis);
+		break;
+
+	case '3':
+		zero_axis(CNCAxis::X);
+		zero_axis(CNCAxis::Y);
+		zero_axis(CNCAxis::Z);
+		break;
+
+	case '4':
 		if (menuMode == MenuModes::Status)
 		{
+			StatusLCD.clear();
 			menuMode = MenuModes::Menu;
 			uiEncoder.Reset();
 		}
-		else 
+		else
 		{
+			StatusLCD.clear();
 			menuMode = MenuModes::Status;
 		}
 		break;
 
-	case '2':
-		// Jog +
-		jogEncoder.Reset();
-		lastJogCommandPosition = 0.0;
-		if (pendantMode == PendantModes::Control)
-		{
-			SendJogCommand(+1.0 * getJogSize());
-		}
-		break;
+	//case 'z':
+	//	// Jog +
+	//	jogEncoder.Reset();
+	//	lastJogCommandPosition = 0.0;
+	//	if (pendantMode == PendantModes::Control)
+	//	{
+	//		SendJogCommand(+1.0 * getJogSize());
+	//	}
+	//	break;
 
-	case '3':
-		// Jog -
-		jogEncoder.Reset();
-		lastJogCommandPosition = 0.0;
-		if (pendantMode == PendantModes::Control)
-		{
-			SendJogCommand(-1.0 * getJogSize());
-		}
-		break;
+	//case 'y':
+	//	// Jog -
+	//	jogEncoder.Reset();
+	//	lastJogCommandPosition = 0.0;
+	//	if (pendantMode == PendantModes::Control)
+	//	{
+	//		SendJogCommand(-1.0 * getJogSize());
+	//	}
+	//	break;
 
-	case '4':
-		enableAdjustableJogSize = true;
-		jogEncoder.Reset();
-		lastJogCommandPosition = 0.0;
-		break;
+	//case 'x':
+	//	enableAdjustableJogSize = true;
+	//	jogEncoder.Reset();
+	//	lastJogCommandPosition = 0.0;
+	//	break;
 
 	case '5':
+		switch (currentSpindleState)
+		{
+			case SpindleState::Off:
+				spindle_on(SpindleState::CW);
+				break;
+
+			case SpindleState::CW:
+				spindle_off();
+				break;
+
+			case SpindleState::CCW:
+				spindle_off();
+				break;
+
+			case SpindleState::Undefined:
+				spindle_off();
+				break;
+
+			default:
+				spindle_off();
+				break;
+		}
+		break;
+
+	case '6':
 		if (pendantMode == PendantModes::Control)
 		{
 			pendantMode = PendantModes::Monitor;
@@ -70,29 +111,59 @@ void ProcessKey(char key)
 		ResetGRBLCommandCount();
 		break;
 
-	case '6':
-		if (grblCoord == GRBLCoord::MPos)
-		{
-			SendGRBLCommandWPos();     // Set to WPos
-		}
-		else if (grblCoord == GRBLCoord::WPos)
-		{
-			SendGRBLCommandMPos();     // Set to MPos
-		}
-		else
-		{
-			SendGRBLCommandMPos();     // Set to MPos
-		}
-		break;
+	//case '6':
+	//	if (grblCoord == GRBLCoord::MPos)
+	//	{
+	//		SendGRBLCommandWPos();     // Set to WPos
+	//	}
+	//	else if (grblCoord == GRBLCoord::WPos)
+	//	{
+	//		SendGRBLCommandMPos();     // Set to MPos
+	//	}
+	//	else
+	//	{
+	//		SendGRBLCommandMPos();     // Set to MPos
+	//	}
+	//	break;
 
 	case '7':
-		incrementJogRateIndex();
+		currentSetMode = SetMode::Spindle;
 		break;
 
 	case '8':
-		incrementJogSizeIndex();
-		jogEncoder.Reset();
-		lastJogCommandPosition = 0.0;
+		switch (currentSetMode)
+		{
+		case SetMode::Feed:
+			incrementJogRateIndex();
+			break;
+
+		case SetMode::Move:
+			incrementJogSizeIndex();
+			jogEncoder.Reset();
+			lastJogCommandPosition = 0.0;
+			break;
+
+		case SetMode::Spindle:
+			incrementSpindleRPMIndex();
+			switch (currentSpindleState)
+			{
+			case SpindleState::CW:
+				spindle_on(SpindleState::CW);
+				break;
+			case SpindleState::CCW:
+				spindle_on(SpindleState::CCW);
+				break;
+			case SpindleState::Off:
+				spindle_off();
+				break;
+			case SpindleState::Undefined:
+				spindle_off();
+				break;
+			default:
+				break;
+			}
+			break;
+		}
 		break;
 
 	case '9':
@@ -101,34 +172,58 @@ void ProcessKey(char key)
 		break;
 
 	case '0':
-		if (pendantMode == PendantModes::Control)
-		{
-			if (currentSpindleState == SpindleState::Off)
-			{
-				spindle_on((int)spindleSpeed);
-			}
-			else
-			{
-				spindle_off();
-			}
+		// Unlock
+		SendGRBLCommandUnlock();
+		break;
 
+	case 'A':
+		currentSetMode = SetMode::Move;
+		break;
+
+	case 'B':
+		switch (currentSetMode)
+		{
+		case SetMode::Feed:
+			setJogRateDefault();
+			break;
+
+		case SetMode::Move:
+			setJogSizeDefault();
+			jogEncoder.Reset();
+			lastJogCommandPosition = 0.0;
+			break;
+
+		case SetMode::Spindle:
+			setSpindleRPMDefault();
+			switch (currentSpindleState)
+			{
+			case SpindleState::CW:
+				spindle_on(SpindleState::CW);
+				break;
+			case SpindleState::CCW:
+				spindle_on(SpindleState::CCW);
+				break;
+			case SpindleState::Off:
+				spindle_off();
+				break;
+			case SpindleState::Undefined:
+				spindle_off();
+				break;
+			default:
+				break;
+			}
 			break;
 		}
 		break;
 
-	case 'A':
-		setJogRateDefault();
-		break;
-
-	case 'B':
-		setJogSizeDefault();
-		jogEncoder.Reset();
-		lastJogCommandPosition = 0.0;
-		break;
-
 	case 'C':
-		// Unlock
-		SendGRBLCommandUnlock();
+		// Stop
+		if (pendantMode == PendantModes::Control)
+		{
+			SendGRBLCommandSoftReset();	// GRBL Soft reset (ctrl-x)
+			ResetGRBLCommandCount();
+			spindle_off();
+		}
 		break;
 
 	case 'D':
@@ -140,13 +235,43 @@ void ProcessKey(char key)
 		break;
 
 	case 'E':
-		decrementJogRateIndex();
+		currentSetMode = SetMode::Feed;
 		break;
 
+
 	case 'F':
-		decrementJogSizeIndex();
-		jogEncoder.Reset();
-		lastJogCommandPosition = 0.0;
+		switch (currentSetMode)
+		{
+		case SetMode::Feed:
+			decrementJogRateIndex();
+			break;
+
+		case SetMode::Move:
+			decrementJogSizeIndex();
+			jogEncoder.Reset();
+			lastJogCommandPosition = 0.0;
+			break;
+
+		case SetMode::Spindle:
+			decrementSpindleRPMIndex();
+			switch (currentSpindleState)
+			{
+			case SpindleState::CW:
+				spindle_on(SpindleState::CW);
+				break;
+			case SpindleState::CCW:
+				spindle_on(SpindleState::CCW);
+				break;
+			case SpindleState::Off:
+				spindle_off();
+				break;
+			case SpindleState::Undefined:
+				spindle_off();
+				break;
+			default:
+				break;
+			}
+		}
 		break;
 
 	case 'G':
@@ -154,7 +279,7 @@ void ProcessKey(char key)
 		break;
 
 	case 'H':
-		currentJogAxis = CNCAxis::Z;
+		currentJogAxis = CNCAxis::X;
 		jogEncoder.Reset();
 		lastJogCommandPosition = 0.0;
 		break;
@@ -166,7 +291,7 @@ void ProcessKey(char key)
 		break;
 
 	case 'J':
-		currentJogAxis = CNCAxis::X;
+		currentJogAxis = CNCAxis::Z;
 		jogEncoder.Reset();
 		lastJogCommandPosition = 0.0;
 		break;

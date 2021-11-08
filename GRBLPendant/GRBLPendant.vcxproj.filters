@@ -22,6 +22,7 @@
     <None Include="lcd_screens.ino" />
     <None Include="persistance.ino" />
     <None Include="serial_io.ino" />
+    <None Include="GRBL_io.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.GRBLPendant.vsarduino.h">

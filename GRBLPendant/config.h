@@ -40,9 +40,9 @@ constexpr auto GRBLSerialSpeed = 115200;
 
 // Command parameters
 
-constexpr auto SpindleMaxSpeed = 12000;				// Max speed for spindle when turned on to 100%
+constexpr auto SpindleMaxSpeed = 24000;				// Max speed for spindle when turned on to 100%
 
-constexpr auto SpindleDefaultSpeedPercent = 75;		// Default spindle speed as percentage of SpindleMaxSpeed
+constexpr auto SpindleDefaultSpeedPercent = 50	;		// Default spindle speed as percentage of SpindleMaxSpeed
 
 // LCD -------------------------------------------
 constexpr auto StatusLCDAddress = 0x26;  // I2C LCD Address
