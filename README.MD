@@ -2,7 +2,7 @@
 
 This project is a pendant for a GRBL CNC controller. It can act standalone, requiring connections only to the GRBL controller and to power, or can sit between a PC running a gcode sender application such as UGS and the GRBL controller. 
 
-![title](Images/example.png)
+![GRBL Pendant ](Images/Top View.png)
 
 In the standalone configuration it can work in "control mode" to home the system, jog along a selected axis, and perform various reset, unlock, and zero axis operations.  
 
@@ -13,6 +13,8 @@ Main control is via a "6 Terminal CNC Pulse Encoder" that can be switched to the
 A second encoder with integral push button is provided for a menu system to configure the system, but this is not currently operational.
 
 This version runs on a Teensy 4.1 which allows it to act as a USB host to drive the controller, in addition to acting as a USB device for the connection to a PC. An earlier version used a UART for communication to the controller and worked with a Teensy 3.2.
+
+![Rear View ](Images/Rear View.png)
 
 It uses standard hardware available from all the usual sources. The main components are:
 1. Teensy 4.1 https://www.pjrc.com/store/teensy41.html
