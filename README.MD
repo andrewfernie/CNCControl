@@ -1,5 +1,6 @@
 # GRBL Pendant
 
+## Introduction
 This project is a pendant for a GRBL CNC controller. It can act standalone, requiring connections only to the GRBL controller and to power, or can sit between a PC running a gcode sender application such as UGS and the GRBL controller. 
 
 ![GRBLPendant](Images/TopView.png)
@@ -16,6 +17,7 @@ This version runs on a Teensy 4.1 which allows it to act as a USB host to drive 
 
 ![Rear Panel](Images/RearView.png)
 
+## Components Used
 It uses standard hardware available from all the usual sources. The main components are:
 1. Teensy 4.1 https://www.pjrc.com/store/teensy41.html
 2. Qty 2 20x4 LCD displays using I2C connections  (set to addressed 0x26 and 0x27) like this https://www.amazon.com/GeeekPi-Interface-Adapter-Backlight-Raspberry/dp/B086VVT4NH
@@ -26,5 +28,10 @@ It uses standard hardware available from all the usual sources. The main compone
 7. 4x4 keypad https://www.amazon.ca/SunFounder-Matrix-Keypad-Arduino-Raspberry/dp/B015E32IXY
 
 
-Twenty buttons in a 4x5 scanned matrix array are used for most control funtions. The 4x4 keypad to the right is a purchased array of microswitches to which I added 3D printed key caps and frame. The four in the left most row used for axis control and jog cancel were added later, and room was tight, so slightly smaller individual switches were used. The last four switches, as well as the one to the top left of the jog wheel, are 10mm x 10mm pushbuttons from my local electronics store. Starting over, a 4x5 array of identical switches would be nicer.  
+Twenty buttons in a 4x5 scanned matrix array are used for most control funtions. The 4x4 keypad to the right is a purchased array of microswitches to which I added 3D printed key caps and frame. The four in the left most row used for axis control and jog cancel were added later, and room was tight, so slightly smaller individual switches were used. The last four switches, as well as the one to the top left of the jog wheel, are 10mm x 10mm pushbuttons from my local electronics store. Starting over, a 4x5 array of identical switches would be nicer.  STL files for the key caps and frames are provided in the Hardware folder.
 
+Stickers were printed on "printable vinyl" sheets https://www.aliexpress.com/item/1005003231276942.html. Images for the stickers are provided in the Hardware folder.
+
+## Controls and Displays
+
+![Controls and Displays](Images/ControlsAndDisplays.png)
