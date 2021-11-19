@@ -55,7 +55,7 @@
 // Defines
 // ===============================================
 //
-constexpr auto ProgramVersion = "1.0.0";
+constexpr auto ProgramVersion = "1.0.1";
 
 //
 // ===============================================
@@ -135,21 +135,20 @@ byte			counter_one_herz = 0;
 // ------------
 // Keypad Setup
 // ------------
-const byte rows = 5; //four rows
-const byte cols = 4; //four columns
+const byte rows = 4; //four rows
+const byte cols = 5; //four columns
 char keys[rows][cols] = {
-  {'1','2','3','4'},
-  {'5','6','7','8'},
-  {'9','0','A','B'},
-  {'C','D','E','F'},
-  {'G','H','I','J'}
+  {'1','2','3','4','5'},
+  {'6','7','8','9','0'},
+  {'A','B','C','D','E'},
+  {'F','G','H','I','J'}
 };
 #ifdef TEENSY32
-byte rowPins[rows] = { 14, 15, 16, 17, 12 }; //connect to the row pinouts of the keypad
-byte colPins[cols] = { 20, 21, 22, 23 }; //connect to the column pinouts of the keypad
+byte rowPins[rows] = {20, 21, 22, 23};  //connect to the row pinouts of the keypad
+byte colPins[cols] = { 14, 15, 16, 17, 12 }; //connect to the column pinouts of the keypad
 #else
-byte rowPins[rows] = { 33, 34, 35, 36, 37 }; //connect to the row pinouts of the keypad
-byte colPins[cols] = { 38, 39, 40, 41 }; //connect to the column pinouts of the keypad
+byte rowPins[rows] = { 38, 39, 40, 41 }; //connect to the row pinouts of the keypad
+byte colPins[cols] = {37, 36, 35, 34, 33};  //connect to the column pinouts of the keypad
 #endif
 
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, rows, cols);
