@@ -31,31 +31,31 @@
 
 void ProcessKey(char key)
 {
-	
-    switch (key)
-	{
+    switch (key) {
         case '1':
             SendGRBLCommandCancelJog();
             break;
 
-        case '2':
-            // Stop
+        case '2':       
+            // Stop, even if not in control mode
+            SendGRBLCommandSoftReset();  // GRBL Soft reset (ctrl-x)
+            ResetGRBLCommandCount();
+            spindle_off();
+            break;
+
+        case '3':
+            // Home
             if (pendantMode == PendantModes::Control) {
-                SendGRBLCommandSoftReset();  // GRBL Soft reset (ctrl-x)
-                ResetGRBLCommandCount();
-                spindle_off();
+                SendGRBLCommandHome();
             }
             break;
 
-         case '3':
-            // Home
-            SendGRBLCommandHome();
-            break;
-
-         case '4':
+        case '4':
             switch (currentSpindleState) {
                 case SpindleState::Off:
-                    spindle_on(SpindleState::CW);
+                    if (pendantMode == PendantModes::Control) {
+                        spindle_on(SpindleState::CW);
+                    }
                     break;
 
                 case SpindleState::CW:
@@ -75,9 +75,11 @@ void ProcessKey(char key)
                     break;
             }
             break;
-        
-		case '5':
-            goto_zero(getJogRate());
+
+        case '5':
+            if (pendantMode == PendantModes::Control) {
+                goto_zero(getJogRate());
+            }
             break;
 
         case '6':
@@ -95,7 +97,9 @@ void ProcessKey(char key)
 
         case '8':
             // Unlock
-            SendGRBLCommandUnlock();
+            if (pendantMode == PendantModes::Control) {
+                SendGRBLCommandUnlock();
+            }
             break;
 
         case '9':
@@ -109,7 +113,6 @@ void ProcessKey(char key)
             jogEncoder.Reset();
             lastJogCommandPosition = 0.0;
 
-            SendGRBLCommandSoftReset();
             ResetGRBLCommandCount();
             break;
 
@@ -129,7 +132,9 @@ void ProcessKey(char key)
             //	break;
 
         case '0':
-            zero_axis(currentJogAxis);
+            if (pendantMode == PendantModes::Control) {
+                zero_axis(currentJogAxis);
+            }
             break;
 
         case 'A':
@@ -151,9 +156,11 @@ void ProcessKey(char key)
             break;
 
         case 'E':
-            zero_axis(CNCAxis::X);
-            zero_axis(CNCAxis::Y);
-            zero_axis(CNCAxis::Z);
+            if (pendantMode == PendantModes::Control) {
+                zero_axis(CNCAxis::X);
+                zero_axis(CNCAxis::Y);
+                zero_axis(CNCAxis::Z);
+            }
             break;
 
         case 'F':
@@ -178,10 +185,14 @@ void ProcessKey(char key)
                     decrementSpindleRPMIndex();
                     switch (currentSpindleState) {
                         case SpindleState::CW:
-                            spindle_on(SpindleState::CW);
+                            if (pendantMode == PendantModes::Control) {
+                                spindle_on(SpindleState::CW);
+                            }
                             break;
                         case SpindleState::CCW:
-                            spindle_on(SpindleState::CCW);
+                            if (pendantMode == PendantModes::Control) {
+                                spindle_on(SpindleState::CCW);
+                            }
                             break;
                         case SpindleState::Off:
                             spindle_off();
@@ -211,10 +222,14 @@ void ProcessKey(char key)
                     setSpindleRPMDefault();
                     switch (currentSpindleState) {
                         case SpindleState::CW:
-                            spindle_on(SpindleState::CW);
+                            if (pendantMode == PendantModes::Control) {
+                                spindle_on(SpindleState::CW);
+                            }
                             break;
                         case SpindleState::CCW:
-                            spindle_on(SpindleState::CCW);
+                            if (pendantMode == PendantModes::Control) {
+                                spindle_on(SpindleState::CCW);
+                            }
                             break;
                         case SpindleState::Off:
                             spindle_off();
@@ -228,7 +243,7 @@ void ProcessKey(char key)
                     break;
             }
             break;
-			  
+
         case 'I':
             switch (currentSetMode) {
                 case SetMode::Feed:
@@ -245,10 +260,14 @@ void ProcessKey(char key)
                     incrementSpindleRPMIndex();
                     switch (currentSpindleState) {
                         case SpindleState::CW:
-                            spindle_on(SpindleState::CW);
+                            if (pendantMode == PendantModes::Control) {
+                                spindle_on(SpindleState::CW);
+                            }
                             break;
                         case SpindleState::CCW:
-                            spindle_on(SpindleState::CCW);
+                            if (pendantMode == PendantModes::Control) {
+                                spindle_on(SpindleState::CCW);
+                            }
                             break;
                         case SpindleState::Off:
                             spindle_off();
@@ -304,5 +323,3 @@ void ProcessKey(char key)
             break;
     }
 }
-
-

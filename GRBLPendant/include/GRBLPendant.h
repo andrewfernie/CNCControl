@@ -183,7 +183,7 @@ extern float currentSpindleSpeed;
 extern float   spindleRPM[];
 extern const uint8_t defaultSpindleRPMIndex;
 extern uint8_t maxSpindleRPMIndex;
-extern uint8_t currentSpindleRPMIndex;
+extern uint8_t commandSpindleRPMIndex;
 
 extern int grblCommandCount;
 extern int grbl_last_command_count;

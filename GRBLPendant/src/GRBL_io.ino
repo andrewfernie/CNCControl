@@ -290,7 +290,6 @@ void ParseStatusLine(char* line_in)
             if (sscanf(temp, "%f", &tmpFloat) == 1)
             {
                 currentSpindleSpeed = tmpFloat;
-                currentSpindleRPMIndex = findClosestSpindleRPMIndex(tmpFloat);
             }
         }
         else if (strcmp(temp, "WCO") == 0)

@@ -55,7 +55,7 @@
 // Defines
 // ===============================================
 //
-constexpr auto ProgramVersion = "1.0.1";
+constexpr auto ProgramVersion = "1.0.2";
 
 //
 // ===============================================
@@ -270,7 +270,8 @@ float currentSpindleSpeed = 0.0;
 float   spindleRPM[] = { 8000.0, 10000.0, 12000.0, 14000.0, 16000.0, 18000.0, 20000.0, 22000.0, 24000.0 };
 const uint8_t defaultSpindleRPMIndex = 3;
 uint8_t maxSpindleRPMIndex = sizeof(spindleRPM) / sizeof(spindleRPM[0]) - 1;
-uint8_t currentSpindleRPMIndex = defaultSpindleRPMIndex;
+uint8_t commandSpindleRPMIndex = defaultSpindleRPMIndex;
+uint8_t actualSpindleRPMIndex = 0;
 
 int grblCommandCount = 0;
 int grbl_last_command_count = 0;
@@ -800,49 +801,52 @@ uint8_t decrementJogSizeIndex()
 
 float getSpindleRPM()
 {
-    return spindleRPM[currentSpindleRPMIndex];
+    return spindleRPM[commandSpindleRPMIndex];
 }
 
 uint8_t setSpindleRPMIndex(uint8_t index)
 {
-    currentSpindleRPMIndex = max(0, min(index, maxSpindleRPMIndex));
-    return currentSpindleRPMIndex;
+    commandSpindleRPMIndex = max(0, min(index, maxSpindleRPMIndex));
+    return commandSpindleRPMIndex;
 }
 
 uint8_t setSpindleRPMDefault()
 {
-    currentSpindleRPMIndex = defaultSpindleRPMIndex;
-    return currentSpindleRPMIndex;
+    commandSpindleRPMIndex = defaultSpindleRPMIndex;
+    return commandSpindleRPMIndex;
 }
 
 uint8_t incrementSpindleRPMIndex()
 {
-    if (currentSpindleRPMIndex < maxSpindleRPMIndex)
+    if (commandSpindleRPMIndex < maxSpindleRPMIndex)
     {
-        currentSpindleRPMIndex++;
+        commandSpindleRPMIndex++;
     }
-    return currentSpindleRPMIndex;
+    return commandSpindleRPMIndex;
 }
 
 uint8_t decrementSpindleRPMIndex()
 {
-    if (currentSpindleRPMIndex > 0)
+    if (commandSpindleRPMIndex > 0)
     {
-        currentSpindleRPMIndex--;
+        commandSpindleRPMIndex--;
     }
-    return currentSpindleRPMIndex;
+    return commandSpindleRPMIndex;
 }
 
 uint8_t findClosestSpindleRPMIndex(float rpm)
 {
-    float delta = 9999999.;
+    float lowest_delta = 9999999.;
+    float delta;
     uint8_t closestIndex = 0;
 
     for (int i = 0; i <= maxSpindleRPMIndex; i++)
     {
-        if (fabs(rpm - spindleRPM[i]) < delta)
+        delta = fabs(rpm - spindleRPM[i]);
+        if (delta < lowest_delta)
         {
             closestIndex = i;
+            lowest_delta = delta;
         }
     }
     closestIndex = max(0, min(closestIndex, maxSpindleRPMIndex));
