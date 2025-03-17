@@ -51,7 +51,14 @@ void SerialIOGRBL()
         else
         {
             if (gr < BufferSize)
+            {
                 grserial[gr++] = c;
+            }
+            else
+            {
+                MSG_ERRORLN("ERROR: GRBL Buffer Overflow");
+                MSG_ERRORLN(grserial);
+            }
         }
     }
 }
@@ -681,11 +688,11 @@ void zero_axis(CNCAxis axis)
         break;
 
     case CNCAxis::Y:
-        SendGRBLCommand("G10 L20 P2 X0.0\n");
+        SendGRBLCommand("G10 L20 P1 Y0.0\n");
         break;
 
     case CNCAxis::Z:
-        SendGRBLCommand("G10 L20 P3 X0.0\n");
+        SendGRBLCommand("G10 L20 P1 Z0.0\n");
         break;
     }
 }

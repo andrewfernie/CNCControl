@@ -29,7 +29,7 @@ constexpr auto DebugSerialSpeed = 115200;
 constexpr auto GSSerialSpeed = 115200;
 #endif
 
-const int BufferSize = 100;
+const int BufferSize = 200;
 
 #ifdef TEENSY41
 #ifdef GRBL_COMM_UART
