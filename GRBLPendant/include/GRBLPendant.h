@@ -1,6 +1,6 @@
 //=========================================================
-//Project: GRBL Pendant
-//Module:  GRBLPendant.h      
+// Project: GRBL Pendant
+// Module:  GRBLPendant.h
 //=========================================================
 //
 // Author: Andrew Fernie
@@ -9,76 +9,197 @@
 //=========================================================
 #pragma once
 
+#include <LiquidCrystal_I2C.h> // LCD over I2C
+#include <Bounce2.h>
+#include "Encoder2.h"
 #include "config.h"
 
-enum class CNCAxis { X, Y, Z };
+// Basic macros for debug and info messages to the serial port
+// If too many messages are being sent the web server used for the configurator may not work as well.
+#define LOG_MSG_BASIC 0
+#define LOG_MSG_LEVEL 2 // 1=ERROR, 2=ERROR+WARN, 3=ERROR+WARN+INFO
+#define LOG_MSG_DEBUG 1
+
+#include "std_defs.h"
+
+enum class CNCAxis
+{
+    X,
+    Y,
+    Z
+};
 
 struct AxisData
 {
-	float x;
-	float y;
-	float z;
+    float x;
+    float y;
+    float z;
 };
-
 
 // ------------
 // Pendant Mode
 // ------------
-enum class PendantModes { Monitor, Control };
+enum class PendantModes
+{
+    Undefined,
+    Monitor,
+    Control
+};
 
 // ------------
 // Set mode
 // ------------
-enum class SetMode { Feed, Move, Spindle };
+enum class SetMode
+{
+    Feed,
+    Move,
+    Spindle
+};
 
 // ------------
 // Menu Mode
 // ------------
-enum class MenuModes { Menu, Status };
+enum class MenuModes
+{
+    Menu,
+    Status
+};
 
 // State codes for Grbl 1.1.   Source https://github.com/gnea/grbl/wiki/Grbl-v1.1-Commands
-// 
+//
 // Motion Mode                 G0, G1, G2, G3, G38.2, G38.3, G38.4, G38.5, G80
-enum class MotionMode { Undefined, Rapid, Linear, CW, CCW, Probe_2, Probe_3, Probe_4, Probe_5, Cancel };
+enum class MotionMode
+{
+    Undefined,
+    Rapid,
+    Linear,
+    CW,
+    CCW,
+    Probe_2,
+    Probe_3,
+    Probe_4,
+    Probe_5,
+    Cancel
+};
 
 // Coordinate System Select    G54, G55, G56, G57, G58, G59
-enum class CoordinateSystemSelect { Undefined, WCS1, WCS2, WCS3, WCS4, WCS5, WCS6 };
+enum class CoordinateSystemSelect
+{
+    Undefined,
+    WCS1,
+    WCS2,
+    WCS3,
+    WCS4,
+    WCS5,
+    WCS6
+};
 
 // Plane Select                G17, G18, G19
-enum class PlaneSelect { Undefined, XY, ZX, YZ };
+enum class PlaneSelect
+{
+    Undefined,
+    XY,
+    ZX,
+    YZ
+};
 
 // Distance Mode               G90, G91
-enum class DistanceMode { Undefined, Absolute, Incremental };
+enum class DistanceMode
+{
+    Undefined,
+    Absolute,
+    Incremental
+};
 
 // Arc IJK Distance Mode       G91.1
-enum class ArcDistanceMode { Off, On };
+enum class ArcDistanceMode
+{
+    Off,
+    On
+};
 
 // Feed Rate Mode              G93, G94
-enum class FeedRateMode { Undefined, Inverse, Normal };
+enum class FeedRateMode
+{
+    Undefined,
+    Inverse,
+    Normal
+};
 
 // Units Mode                  G20, G21
-enum class UnitsMode { Undefined, Inches, mm };
+enum class UnitsMode
+{
+    Undefined,
+    Inches,
+    mm
+};
 
 // Cutter Radius Compensation  G40
-enum class CutterRadiusCompensation { Off, On };
+enum class CutterRadiusCompensation
+{
+    Off,
+    On
+};
 
 // Tool Length Offset          G43.1, G49
-enum class ToolLengthOffsetMode { Undefined, Dynamic, Cancel };
+enum class ToolLengthOffsetMode
+{
+    Undefined,
+    Dynamic,
+    Cancel
+};
 
 // Program Mode                M0, M1, M2, M30
-enum class ProgramMode { Undefined, Stop, Optional, End, Rewind };
+enum class ProgramMode
+{
+    Undefined,
+    Stop,
+    Optional,
+    End,
+    Rewind
+};
 
 // Coolant State               M7, M8, M9
-enum class CoolantState { Undefined, Mist, Flood, Off };
+enum class CoolantState
+{
+    Undefined,
+    Mist,
+    Flood,
+    Off
+};
 
 // GRBL controller states
-enum class GRBLStates { Undefined, Idle, Run, Hold, Jog, Alarm, Door, Check, Home, Sleep };
+enum class GRBLStates
+{
+    Undefined,
+    Idle,
+    Run,
+    Hold,
+    Jog,
+    Alarm,
+    Door,
+    Check,
+    Home,
+    Sleep,
+    Tool
+};
 
 // Co-ordinate system
-enum class GRBLCoord { Undefined, MPos, WPos };
+enum class GRBLCoord
+{
+    Undefined,
+    MPos,
+    WPos
+};
 
 // Spindle State               M3, M4, M5
-enum class SpindleState { Undefined, CW, CCW, Off };
+enum class SpindleState
+{
+    Undefined,
+    CW,
+    CCW,
+    Off
+};
 
 void fast_loop();
 
@@ -87,8 +208,8 @@ void medium_loop();
 void slow_loop();
 
 void one_second_loop();
-char* split(char* string, char* delimiter, int index);
-void set_grblState_from_chars(char* tmp);
+char *split(char *string, char *delimiter, int index);
+void set_grblState_from_chars(char *tmp);
 
 float getJogRate();
 
@@ -112,6 +233,8 @@ uint8_t incrementSpindleRPMIndex();
 uint8_t decrementSpindleRPMIndex();
 uint8_t findClosestSpindleRPMIndex(float rpm);
 uint32_t freeMem();
+
+extern const char *ProgramVersion;
 
 extern int pc;
 extern int gr;
@@ -147,40 +270,39 @@ extern float currentFeedRate;
 
 extern float spindleSpeed;
 
-
-extern float currentOvFeedRatePercent;  //Override Percent
-extern float currentOvRapidRatePercent;  //Override Percent
+extern float currentOvFeedRatePercent;  // Override Percent
+extern float currentOvRapidRatePercent; // Override Percent
 
 extern char lastMessage[];
 extern unsigned long lastMessageTime;
-extern int  alarmNumber;			// Alarm message number
+extern int alarmNumber; // Alarm message number
 extern unsigned long lastAlarmTime;
-extern int  errorNumber;			// Error message number
+extern int errorNumber; // Error message number
 extern unsigned long lastErrorTime;
 
 extern AxisData currentPosition;
 
 extern AxisData currentWCO;
 
-extern uint32_t  lastIdleTimeoutCheck;
+extern uint32_t lastIdleTimeoutCheck;
 
 extern CNCAxis currentJogAxis;
 
-extern float   jogSize[];
+extern float jogSize[];
 extern const uint8_t defaultJogSizeIndex;
 extern uint8_t maxJogSizeIndex;
 extern uint8_t currentJogSizeIndex;
-extern float   adjustableJogSize;
+extern float adjustableJogSize;
 extern uint8_t enableAdjustableJogSize;
 extern bool stopJogCommand;
-extern float   jogRate[];
+extern float jogRate[];
 extern const uint8_t defaultJogRateIndex;
 extern uint8_t maxJogRateIndex;
 extern uint8_t currentJogRateIndex;
 extern SpindleState currentSpindleState;
 extern float currentSpindleSpeed;
 
-extern float   spindleRPM[];
+extern float spindleRPM[];
 extern const uint8_t defaultSpindleRPMIndex;
 extern uint8_t maxSpindleRPMIndex;
 extern uint8_t commandSpindleRPMIndex;
@@ -189,11 +311,16 @@ extern int grblCommandCount;
 extern int grbl_last_command_count;
 extern float lastJogCommandPosition;
 extern uint8_t menuVarUnits;
-extern float   menuJogSpeedXY;
-extern float   menuJogSpeedZ;
+extern float menuJogSpeedXY;
+extern float menuJogSpeedZ;
 
 extern LiquidCrystal_I2C JogLCD;
 extern LiquidCrystal_I2C StatusLCD;
+
+extern Bounce jogResetButton;
+
+extern CEncoder2 uiEncoder;
+extern CEncoder2 jogEncoder;
 
 extern long lastStatusRXTime;
 extern long lastStateRXTime;
@@ -201,8 +328,7 @@ extern long lastStateRXTime;
 #ifdef GRBL_COMM_USB
 extern USBHost grblUSB;
 extern USBSerial grblUSBSerial;
-extern USBDriver* drivers[];
-#define CNT_DEVICES (sizeof(drivers)/sizeof(drivers[0]))
-extern const char* driver_names[];
+extern USBDriver *drivers[];
+extern const char *driver_names[];
 extern bool driver_active[];
 #endif

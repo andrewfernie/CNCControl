@@ -1,6 +1,7 @@
+#pragma once
 //=========================================================
-//Project: GRBL Pendant
-//Module:  key_commands.H   
+// Project: GRBL Pendant
+// Module:  key_commands.H
 //=========================================================
 //
 // Author: Andrew Fernie

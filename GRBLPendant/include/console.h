@@ -1,6 +1,7 @@
+#pragma once
 //=========================================================
-//Project: GRBL Pendant
-//Module:  encoder.ino
+// Project: GRBL Pendant
+// Module:  console.h
 //=========================================================
 //
 // GRBLPendant CNC control Copyright(C) 2021 Andrew Fernie
@@ -19,22 +20,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 //=========================================================
-//
-// This project includes code from the  XLCD/SerialSpy
-// project by Frank Herrmann.
-// https://github.com/xpix/XLCD/tree/master/serialspy
-//
-//=========================================================
-
-//--------------------------------------------------------------------------------------
-// ReadJogResetButton()
-//--------------------------------------------------------------------------------------
-bool ReadJogResetButton()
-{
-	bool sw = false;
-
-	// Rotary Encoder Select
-	sw = !jogResetButton.read();
-
-	return sw;
-}
+void ParseCommandLine(char *line);
+void free_ram();
+void setinterval_char(char *line);
+void setinterval(int ms);
+void resetDevice(int n);

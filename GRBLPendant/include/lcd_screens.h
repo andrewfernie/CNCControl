@@ -1,7 +1,7 @@
 #pragma once
 //=========================================================
-//Project: GRBL Pendant
-//Module:  lcd_screens.H     
+// Project: GRBL Pendant
+// Module:  lcd_screens.H
 //=========================================================
 //
 // Author: Andrew Fernie

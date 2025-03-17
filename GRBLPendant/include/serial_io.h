@@ -1,6 +1,7 @@
+#pragma once
 //=========================================================
-//Project: GRBL Pendant
-//Module:  serial_io.h
+// Project: GRBL Pendant
+// Module:  serial_io.h
 //=========================================================
 //
 // Author: Andrew Fernie
@@ -10,4 +11,4 @@
 // This code started from the XLCD project by Frank Herrmann
 //----------------------------------------------------------
 void SerialIOGS();
-void ParsePCCommand(char* line);
+void ParsePCCommand(char *line);

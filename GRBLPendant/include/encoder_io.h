@@ -1,6 +1,7 @@
+#pragma once
 //=========================================================
-//Project: GRBL Pendant
-//Module:  encoder_io.h      
+// Project: GRBL Pendant
+// Module:  encoder_io.h
 //=========================================================
 //
 // Author: Andrew Fernie

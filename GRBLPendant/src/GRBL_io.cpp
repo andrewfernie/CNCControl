@@ -1,6 +1,6 @@
 //=========================================================
-//Project: GRBL Pendant
-//Module:  GRBL_io.ino
+// Project: GRBL Pendant
+// Module:  GRBL_io.ino
 //=========================================================
 //
 // GRBLPendant CNC control Copyright(C) 2021 Andrew Fernie
@@ -25,9 +25,10 @@
 // https://github.com/xpix/XLCD/tree/master/serialspy
 //
 //=========================================================
-
+#include <Arduino.h>
 #include "GRBLPendant.h"
 #include "errors_alarms.h"
+#include "GRBL_io.h"
 
 // Get data from GRBL ==> PC
 void SerialIOGRBL()
@@ -36,47 +37,51 @@ void SerialIOGRBL()
     {
         char c = GrblCommRead();
 
-        // wait for a complete line 
+        // wait for a complete line
         // and parse it
-        if (c == '\n') {
-
-            DEBUG_PRINTLN(grserial);
+        if (c == '\n')
+        {
+            MSG_DEBUGLN(grserial);
             ParseGrblLine(grserial);
 
             gr = 0;
             memset(&grserial[0], 0, sizeof(grserial));
             grserial[0] = '\0';
         }
-        else {
+        else
+        {
             if (gr < BufferSize)
                 grserial[gr++] = c;
         }
     }
 }
 
-
 // Analyze every line and choose an action
-void ParseGrblLine(char* line_in)
+void ParseGrblLine(char *line_in)
 {
     char line[BufferSize];
 
     strcpy(line, line_in);
 
-    char* c2 = strrchr(line, '\r');
+    char *c2 = strrchr(line, '\r');
     *c2 = '\0';
 
     if (line[0] == '<')
     {
         ParseStatusLine(line);
-        gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
+#ifdef SENDER_COMMS
+        gsSerial.print(line_in); // send line from the grbl controller to the g-code sender
         gsSerial.print("\n");
+#endif // SENDER_COMMS
     }
     else if (strncmp(line, "[MSG:", 5) == 0)
     {
         if (pendantMode != PendantModes::Control)
         {
-            gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
+#ifdef SENDER_COMMS
+            gsSerial.print(line_in); // send line from the grbl controller to the g-code sender
             gsSerial.print("\n");
+#endif // SENDER_COMMS
         }
         for (int i = 0; i <= 20; i++)
             lastMessage[i] = '\0';
@@ -85,7 +90,7 @@ void ParseGrblLine(char* line_in)
         lastMessage[20] = '\0';
         lastMessageTime = millis();
 
-        DEBUG_PRINTLN(line_in);
+        MSG_DEBUGLN(line_in);
     }
     else if (line[0] == '[')
     {
@@ -93,36 +98,42 @@ void ParseGrblLine(char* line_in)
 
         if (pendantMode != PendantModes::Control)
         {
-            gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
+#ifdef SENDER_COMMS
+            gsSerial.print(line_in); // send line from the grbl controller to the g-code sender
             gsSerial.print("\n");
+#endif // SENDER_COMMS
         }
-        DEBUG_PRINTLN(line_in);
+        MSG_DEBUGLN(line_in);
     }
     else if (strncmp(line, "ok", 2) == 0)
     {
         if (pendantMode == PendantModes::Control)
         {
-            if (grblCommandCount > 0)    // Prevent count from going below zero
+            if (grblCommandCount > 0) // Prevent count from going below zero
                 grblCommandCount--;
             else
                 ResetGRBLCommandCount();
         }
         else
         {
-            gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
+#ifdef SENDER_COMMS
+            gsSerial.print(line_in); // send line from the grbl controller to the g-code sender
             gsSerial.print("\n");
+#endif // SENDER_COMMS
         }
     }
     else if (strncmp(line, "error", 5) == 0)
     {
         if (pendantMode != PendantModes::Control)
         {
-            gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
+#ifdef SENDER_COMMS
+            gsSerial.print(line_in); // send line from the grbl controller to the g-code sender
             gsSerial.print("\n");
+#endif // SENDER_COMMS
         }
-        DEBUG_PRINTLN(line_in);
+        MSG_DEBUGLN(line_in);
 
-        char errCode[3] = { 0,0,0 };
+        char errCode[3] = {0, 0, 0};
         errCode[0] = line[6];
         if (line[7] >= '0' && line[7] <= '9')
             errCode[1] = line[7];
@@ -138,19 +149,20 @@ void ParseGrblLine(char* line_in)
             errorNumber = 0;
         }
         lastErrorTime = millis();
-
     }
     else if (strncmp(line, "ALARM", 5) == 0)
     {
         if (pendantMode != PendantModes::Control)
         {
-            gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
+#ifdef SENDER_COMMS
+            gsSerial.print(line_in); // send line from the grbl controller to the g-code sender
             gsSerial.print("\n");
+#endif // SENDER_COMMS
         }
 
         lastAlarmTime = millis();
 
-        //DEBUG_PRINTLN(line_in);
+        // MSG_DEBUGLN(line_in);
 
         alarmNumber = line[6] - '0';
         if (alarmNumber < alarm_num_min)
@@ -164,22 +176,40 @@ void ParseGrblLine(char* line_in)
     }
     else
     {
-        gsSerial.print(line_in);     // send line from the grbl controller to the g-code sender
+#ifdef SENDER_COMMS
+        gsSerial.print(line_in); // send line from the grbl controller to the g-code sender
         gsSerial.print("\n");
+#endif // SENDER_COMMS
     }
-
 }
-
 
 //// If the pendant is in monitor mode send everything on to the sender.
 //// If not, dont send data from $G or empty strings as UGS objects.
-//if ((pendantMode == PendantModes::Monitor) || ((grserial[0] != '[') && (grserial[0] != 0)))
+// if ((pendantMode == PendantModes::Monitor) || ((grserial[0] != '[') && (grserial[0] != 0)))
 //{
 //	gsSerial.print(grserial);     // send line from the grbl controller to the g-code sender
 //	gsSerial.print(c);
-//}
-void ParseStatusLine(char* line_in)
+// }
+void ParseStatusLine(char *line_in)
 {
+    // Full status line from GRBL  (https://github.com/grblHAL/core/wiki/Report-extensions#realtime-report)
+    // [ < Idle | Run | Hold | Jog | Alarm | Door | Check | Home | Sleep | Tool > { : <substatus>} | < WPos : | MPos:><axis positions>
+    //     { | Bf : <block buffers free>, <RX characters free> }
+    //     { | Ln : <line number> }
+    //     { | FS : <feed rate>, <programmed rpm> { , <actual rpm> }    }
+    //     { | Pn : <signals> }
+    //     { | WCO : <axis offsets> }
+    //     { | WCS : G<coordinate system> }
+    //     { | Ov : <overrides> }
+    //     { | A : <accessory status> }
+    //     { | MPG : <0 | 1> }
+    //     { | H : <0 | 1> { , <axis bitmask> }    }
+    //     { | D : <0 | 1> }
+    //     { | Sc : <axisletters> }
+    //     { | TLR : <0 | 1> }
+    //     { | FW : <firmware> }
+    //     { | In:<result>}
+    // ]
     // Typical status lines formats
     //
     // <Idle | WPos:73.000, 0.000, -20.000 | FS : 0, 0>
@@ -187,14 +217,15 @@ void ParseStatusLine(char* line_in)
     // <Idle | WPos:73.000, 0.000, -20.000 | FS : 0, 0 | Ov : 100, 100, 100>
 
     char delim[] = "<,:|";
-    char* temp;
+    char *temp;
     float tmpFloat;
-    int   n;
+    int tmpInt;
+    int n;
     char line[BufferSize];
 
     lastStatusRXTime = millis();
 
-    strcpy(line, line_in);	// work with local copy as strtok modifies the source
+    strcpy(line, line_in); // work with local copy as strtok modifies the source
 
     // First Line
     // State ..
@@ -204,7 +235,6 @@ void ParseStatusLine(char* line_in)
         set_grblState_from_chars(temp);
     else
         grblState = GRBLStates::Undefined;
-
 
     // Coordinates ..
     temp = strtok(NULL, delim);
@@ -229,7 +259,6 @@ void ParseStatusLine(char* line_in)
         grblCoord = GRBLCoord::Undefined;
     }
 
-
     // X Machine position ...
     temp = strtok(NULL, delim);
     if (temp != NULL)
@@ -241,7 +270,6 @@ void ParseStatusLine(char* line_in)
             currentPosition.x = tmpFloat;
         }
     }
-
 
     // Y Machine position ...
     temp = strtok(NULL, delim);
@@ -276,7 +304,6 @@ void ParseStatusLine(char* line_in)
             {
                 currentFeedRate = tmpFloat;
             }
-
         }
         else if (strcmp(temp, "FS") == 0)
         {
@@ -329,7 +356,26 @@ void ParseStatusLine(char* line_in)
             temp = strtok(NULL, delim);
             if (sscanf(temp, "%f", &tmpFloat) == 1)
             {
-                //TODO				currentOvSpindleSpeedPercent = tmpFloat;
+                // TODO				currentOvSpindleSpeedPercent = tmpFloat;
+            }
+        }
+        else if (strcmp(temp, "MPG") == 0)
+        {
+            temp = strtok(NULL, delim);
+            if (sscanf(temp, "%d", &tmpInt) == 1)
+            {
+                if (tmpInt == 0)
+                {
+                    pendantMode = PendantModes::Monitor;
+                }
+                else if (tmpInt == 1)
+                {
+                    pendantMode = PendantModes::Control;
+                }
+                else
+                {
+                    pendantMode = PendantModes::Undefined;
+                }
             }
         }
         temp = strtok(NULL, delim);
@@ -339,19 +385,18 @@ void ParseStatusLine(char* line_in)
 }
 
 // send every second the command $G
-void ParseStateLine(char* stateLine)
+void ParseStateLine(char *stateLine)
 {
     // Typical state line
     // [GC:G0 G54 G17 G21 G90 G94 M5 M9 T0 F0 S0]
     //
-
 
     char delim[] = "[ ]:";
 
     //             mm                   TNr Feed
     // G0 G54 G17 G21 G90 G94 M0 M5 M9 T0 F500.000
 
-    char* thisToken;
+    char *thisToken;
 
     char buffer[BufferSize];
 
@@ -400,7 +445,7 @@ void ParseStateLine(char* stateLine)
             else if (strcmp(thisToken, "G21") == 0)
                 currentUnitsMode = UnitsMode::mm;
 
-            // Coordinate System Select    
+            // Coordinate System Select
             else if (strcmp(thisToken, "G54") == 0)
                 currentCoordinateSystemSelect = CoordinateSystemSelect::WCS1;
             else if (strcmp(thisToken, "G55") == 0)
@@ -435,13 +480,11 @@ void ParseStateLine(char* stateLine)
             else if (strcmp(thisToken, "G40") == 0)
                 currentCutterRadiusCompensation = CutterRadiusCompensation::On;
 
-
             // Tool Length Offset          G43.1, G49
             else if (strcmp(thisToken, "G43.1") == 0)
                 currentToolLengthOffsetMode = ToolLengthOffsetMode::Dynamic;
             else if (strcmp(thisToken, "G49") == 0)
                 currentToolLengthOffsetMode = ToolLengthOffsetMode::Cancel;
-
         }
         else if (thisToken[0] == 'M')
         {
@@ -490,11 +533,11 @@ void ParseStateLine(char* stateLine)
     }
 }
 
-void SendGRBLCommand_NoCount(char* command)
+void SendGRBLCommand_NoCount(char *command)
 {
     GrblCommPrintCharArray(command);
 }
-void SendGRBLCommand(char* command)
+void SendGRBLCommand(char *command)
 {
     SendGRBLCommand_NoCount(command);
     grblCommandCount++;
@@ -517,7 +560,7 @@ void ResetGRBLCommandCount()
 
 void SendGRBLCommandSoftReset()
 {
-    SendGRBLCommand("\x18");	// GRBL Soft reset (ctrl-x) - note no CRLF
+    SendGRBLCommand("\x18"); // GRBL Soft reset (ctrl-x) - note no CRLF
 }
 
 void SendGRBLCommandUnlock()
@@ -527,16 +570,16 @@ void SendGRBLCommandUnlock()
 
 void SendGRBLCommandFeedHold()
 {
-    SendGRBLCommand("\x21");     // GRBL Feed hold - note no CRLF
-    stopJogCommand = true;		// flag to the jog controller to stop sending
-    ResetGRBLCommandCount();	// GRBL flushes the buffer when it receives a feed hold
+    SendGRBLCommand("\x21"); // GRBL Feed hold - note no CRLF
+    stopJogCommand = true;   // flag to the jog controller to stop sending
+    ResetGRBLCommandCount(); // GRBL flushes the buffer when it receives a feed hold
 }
 
 void SendGRBLCommandCancelJog()
 {
-    SendGRBLCommand("\x85");  // GRBL cancel jog - note no CRLF
-    stopJogCommand = true;    // flag to the jog controller to stop sending
-    ResetGRBLCommandCount();  // GRBL flushes the buffer when it receives a feed hold
+    SendGRBLCommand("\x85"); // GRBL cancel jog - note no CRLF
+    stopJogCommand = true;   // flag to the jog controller to stop sending
+    ResetGRBLCommandCount(); // GRBL flushes the buffer when it receives a feed hold
 }
 
 void SendGRBLCommandHome()
@@ -546,16 +589,13 @@ void SendGRBLCommandHome()
 
 void SendGRBLCommandWPos()
 {
-    SendGRBLCommand("$10=0\n");     // Set to WPos
+    SendGRBLCommand("$10=0\n"); // Set to WPos
 }
 
 void SendGRBLCommandMPos()
 {
-    SendGRBLCommand("$10=1\n");     // Set to MPos
+    SendGRBLCommand("$10=1\n"); // Set to MPos
 }
-
-
-
 
 void SendJogCommand(float displacement)
 {
@@ -584,7 +624,6 @@ void SendJogCommand(float displacement)
     strcat(commandStr, tmpStr);
 
     SendGRBLCommand(commandStr);
-
 }
 
 void spindle_on_speed(int speed, SpindleState state)
@@ -592,13 +631,15 @@ void spindle_on_speed(int speed, SpindleState state)
     char commandStr[30];
     char tmpStr[30];
 
-    if (state == SpindleState::CW) {
+    if (state == SpindleState::CW)
+    {
         strcpy(commandStr, "M3S");
         sprintf(tmpStr, "%d\n", speed);
         strcat(commandStr, tmpStr);
         SendGRBLCommand(commandStr);
     }
-    else if (state == SpindleState::CCW) {
+    else if (state == SpindleState::CCW)
+    {
         strcpy(commandStr, "M4S");
         sprintf(tmpStr, "%d\n", speed);
         strcat(commandStr, tmpStr);
@@ -606,18 +647,19 @@ void spindle_on_speed(int speed, SpindleState state)
     }
 }
 
-
 void spindle_on(SpindleState state)
 {
     char commandStr[30];
     char tmpStr[30];
-    if (state == SpindleState::CW) {
+    if (state == SpindleState::CW)
+    {
         strcpy(commandStr, "M3S");
         sprintf(tmpStr, "%d\n", int(getSpindleRPM()));
         strcat(commandStr, tmpStr);
         SendGRBLCommand(commandStr);
     }
-    else if (state == SpindleState::CCW) {
+    else if (state == SpindleState::CCW)
+    {
         strcpy(commandStr, "M4S");
         sprintf(tmpStr, "%d\n", int(getSpindleRPM()));
         strcat(commandStr, tmpStr);
@@ -675,7 +717,7 @@ void goto_zero(float feed)
     SendGRBLCommand(cmdString);
 }
 
-size_t GrblCommPrintCharArray(const char* charArrayIn)
+size_t GrblCommPrintCharArray(const char *charArrayIn)
 {
     size_t returnValue;
 
@@ -683,7 +725,7 @@ size_t GrblCommPrintCharArray(const char* charArrayIn)
     returnValue = grblSerial.print(charArrayIn);
 #else
     returnValue = grblUSBSerial.print(charArrayIn);
-    DEBUG_PRINT(charArrayIn);
+    MSG_DEBUG(charArrayIn);
 #endif
     return returnValue;
 }
@@ -694,6 +736,18 @@ size_t GrblCommWriteChar(const char charIn)
 
 #ifdef GRBL_COMM_UART
     returnValue = grblSerial.write(charIn);
+#else
+    returnValue = grblUSBSerial.write(charIn);
+#endif
+    return returnValue;
+}
+
+size_t GrblCommModeSwitch()
+{
+    size_t returnValue;
+
+#ifdef GRBL_COMM_UART
+    returnValue = grblSerial.write(0x8B);
 #else
     returnValue = grblUSBSerial.write(charIn);
 #endif
@@ -726,40 +780,40 @@ int GrblCommAvailable()
     return returnValue;
 }
 
-void USBDeviceCheck(uint32_t usbbaud, uint32_t usbformat)
+void USBDeviceCheck(uint8_t numusbdevices, uint32_t usbbaud, uint32_t usbformat)
 {
 #ifdef GRBL_COMM_USB
 
 #ifdef USB_COMM_DEBUG
-    //	Serial.println("Enter USBDeviceCheck");
+    //	debugSerial.println("Enter USBDeviceCheck");
 #endif
 
     grblUSB.Task();
 
     // Print out information about different devices.
-    for (uint8_t i = 0; i < CNT_DEVICES; i++)
+    for (uint8_t i = 0; i < numusbdevices; i++)
     {
         if (*drivers[i] != driver_active[i])
         {
             if (driver_active[i])
             {
 #ifdef USB_COMM_DEBUG
-                Serial.printf("*** Device %s - disconnected ***\n", driver_names[i]);
+                debugSerial.printf("*** Device %s - disconnected ***\n", driver_names[i]);
 #endif
                 driver_active[i] = false;
             }
             else
             {
 #ifdef USB_COMM_DEBUG
-                Serial.printf("*** Device %s %x:%x - connected ***\n", driver_names[i], drivers[i]->idVendor(), drivers[i]->idProduct());
+                debugSerial.printf("*** Device %s %x:%x - connected ***\n", driver_names[i], drivers[i]->idVendor(), drivers[i]->idProduct());
 #endif
                 driver_active[i] = true;
 
 #ifdef USB_COMM_DEBUG
-                const uint8_t* psz = drivers[i]->manufacturer();
+                const uint8_t *psz = drivers[i]->manufacturer();
                 if (psz && *psz)
                 {
-                    Serial.printf("  manufacturer: %s\n", psz);
+                    debugSerial.printf("  manufacturer: %s\n", psz);
                 }
 #endif
 
@@ -767,7 +821,7 @@ void USBDeviceCheck(uint32_t usbbaud, uint32_t usbformat)
                 psz = drivers[i]->product();
                 if (psz && *psz)
                 {
-                    Serial.printf("  product: %s\n", psz);
+                    debugSerial.printf("  product: %s\n", psz);
                 }
 #endif
 
@@ -775,7 +829,7 @@ void USBDeviceCheck(uint32_t usbbaud, uint32_t usbformat)
                 psz = drivers[i]->serialNumber();
                 if (psz && *psz)
                 {
-                    Serial.printf("  Serial: %s\n", psz);
+                    debugSerial.printf("  Serial: %s\n", psz);
                 }
 #endif
 
@@ -790,7 +844,7 @@ void USBDeviceCheck(uint32_t usbbaud, uint32_t usbformat)
 #ifdef USB_COMM_DEBUG
         else
         {
-            Serial.printf("  Driver %d, %d\n", i, driver_active[i]);
+            debugSerial.printf("  Driver %d, %d\n", i, driver_active[i]);
         }
 #endif
     }

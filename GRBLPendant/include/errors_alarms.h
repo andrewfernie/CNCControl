@@ -1,7 +1,7 @@
 #pragma once
 //=========================================================
-//Project: GRBL Pendant
-//Module:  errors_alarms.h     
+// Project: GRBL Pendant
+// Module:  errors_alarms.h
 //=========================================================
 //
 // Author: Andrew Fernie
@@ -51,86 +51,85 @@
 const int errorNumMin = 1;
 const int errorNumMax = 38;
 const char errorMessage[][17] =
-{
-	//0  
-	"Not an error    ",
-	//1	
-	"GC Ltr not fnd  ",
-	//2	
-	"Num val invalid ",
-	//3	
-	"$ sys cmd invld ",
-	//4	
-	"Expctd +'ve val.",
-	//5	
-	"Hom cy not enbld",
-	//6	
-	"Min stp pls <3us",
-	//7	
-	"EEPROM rd failed",
-	//8	
-	"$ nds Grbl IDLE ",
-	//9	
-	"Alm or jog state",
-	//10
-	"Home not enbld. ",
-	//11
-	"Too many chars. ",
-	//12
-	"Stp rte too high",
-	//13
-	"Sfty door open  ",
-	//14 (Grbl-Mega Only) 
-	"EEPROM line lnth",
-	//15
-	"Jog exceed limit",
-	//16
-	"Invalid Jog cmd ",
-	//17
-	"Lsr need PWM o/p",
-	//18
-	"Not an error    ",
-	//19
-	"Not an error    ",
-	//20
-	"Invalid GC cmd  ",
-	//21
-	"Cmd modal group ",
-	//22
-	"Fd rate undef   ",
-	//23
-	"GC nds int val. ",
-	//24
-	"GC require XYZ 1",
-	//25
-	"GC word repeated",
-	//26
-	"GC require XYZ 2",
-	//27
-	"line num invld  ",
-	//28
-	"GC needs P or L ",
-	//29
-	"G54-G59,.1,.2,.3",
-	//30
-	"GC nds G0 or G1 ",
-	//31
-	"Unused axis wrds",
-	//32
-	"No XYZ axis wrds",
-	//33
-	"Arc invld target",
-	//34
-	"Arc math error  ",
-	//35
-	"Arc miss. IJK   ",
-	//36
-	"Unused GC words ",
-	//37
-	"The G43.1 error ",
-	//38
-	"Tool number>MAX "
-};
+    {
+        // 0
+        "Not an error    ",
+        // 1
+        "GC Ltr not fnd  ",
+        // 2
+        "Num val invalid ",
+        // 3
+        "$ sys cmd invld ",
+        // 4
+        "Expctd +'ve val.",
+        // 5
+        "Hom cy not enbld",
+        // 6
+        "Min stp pls <3us",
+        // 7
+        "EEPROM rd failed",
+        // 8
+        "$ nds Grbl IDLE ",
+        // 9
+        "Alm or jog state",
+        // 10
+        "Home not enbld. ",
+        // 11
+        "Too many chars. ",
+        // 12
+        "Stp rte too high",
+        // 13
+        "Sfty door open  ",
+        // 14 (Grbl-Mega Only)
+        "EEPROM line lnth",
+        // 15
+        "Jog exceed limit",
+        // 16
+        "Invalid Jog cmd ",
+        // 17
+        "Lsr need PWM o/p",
+        // 18
+        "Not an error    ",
+        // 19
+        "Not an error    ",
+        // 20
+        "Invalid GC cmd  ",
+        // 21
+        "Cmd modal group ",
+        // 22
+        "Fd rate undef   ",
+        // 23
+        "GC nds int val. ",
+        // 24
+        "GC require XYZ 1",
+        // 25
+        "GC word repeated",
+        // 26
+        "GC require XYZ 2",
+        // 27
+        "line num invld  ",
+        // 28
+        "GC needs P or L ",
+        // 29
+        "G54-G59,.1,.2,.3",
+        // 30
+        "GC nds G0 or G1 ",
+        // 31
+        "Unused axis wrds",
+        // 32
+        "No XYZ axis wrds",
+        // 33
+        "Arc invld target",
+        // 34
+        "Arc math error  ",
+        // 35
+        "Arc miss. IJK   ",
+        // 36
+        "Unused GC words ",
+        // 37
+        "The G43.1 error ",
+        // 38
+        "Tool number>MAX "};
 
 //
 //     Alarm Code Descriptions From GRBL Documentation
@@ -149,25 +148,24 @@ const char errorMessage[][17] =
 const int alarm_num_min = 1;
 const int alarm_num_max = 9;
 const char alarm_message[][17] =
-{
-	//0	
-	"Not an alarm    ",
-	//1	
-	"Hard limit trig ",
-	//2	
-	"GC > machn trvl ",
-	//3	
-	"Reset in motion ",
-	//4	
-	"Probe fail. 1   ",
-	//5	
-	"Probe fail. 2   ",
-	//6	
-	"Homing fail 1   ",
-	//7	
-	"Homing fail 2   ",
-	//8	
-	"Homing fail 3   ",
-	//9	
-	"Homing fail 4   "
-};
+    {
+        // 0
+        "Not an alarm    ",
+        // 1
+        "Hard limit trig ",
+        // 2
+        "GC > machn trvl ",
+        // 3
+        "Reset in motion ",
+        // 4
+        "Probe fail. 1   ",
+        // 5
+        "Probe fail. 2   ",
+        // 6
+        "Homing fail 1   ",
+        // 7
+        "Homing fail 2   ",
+        // 8
+        "Homing fail 3   ",
+        // 9
+        "Homing fail 4   "};
