@@ -25,7 +25,7 @@
 // https://github.com/xpix/XLCD/tree/master/serialspy
 //
 //=========================================================
-
+#include <Arduino.h>
 #include "GRBLPendant.h"
 #include "GRBL_io.h"
 

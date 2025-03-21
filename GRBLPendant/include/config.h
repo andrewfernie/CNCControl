@@ -1,10 +1,6 @@
 // config.h
 #pragma once
-#if defined(ARDUINO) && ARDUINO >= 100
-#include "arduino.h"
-#else
-#include "WProgram.h"
-#endif
+
 // Select one of the following for communication with GRBL
 #define GRBL_COMM_UART
 // #define GRBL_COMM_USB  // Not supported by Teensy 3.2

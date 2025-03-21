@@ -1,10 +1,5 @@
 #pragma once
 // Encoder2.h
-#if defined(ARDUINO) && ARDUINO >= 100
-#include "arduino.h"
-#else
-#include "WProgram.h"
-#endif
 
 #include <Encoder.h>
 #include <Bounce2.h>

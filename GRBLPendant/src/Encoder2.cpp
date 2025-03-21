@@ -1,6 +1,7 @@
 //
 //
 //
+#include <Arduino.h>
 #include "Encoder2.h"
 
 CEncoder2::CEncoder2(uint8_t pin1, uint8_t pin2, int8_t divider) : Encoder{pin1, pin2}

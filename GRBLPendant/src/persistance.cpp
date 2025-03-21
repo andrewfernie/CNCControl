@@ -22,6 +22,7 @@
 // --------------- EEPROM Utilities ----------
 //	From:	http://blog.ncode.ca/?p=42
 //
+#include <Arduino.h>
 #include <EEPROM.h>
 #include <stdint.h>
 #include "persistance.h"

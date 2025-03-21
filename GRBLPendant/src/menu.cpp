@@ -25,7 +25,7 @@
 // https://github.com/xpix/XLCD/tree/master/serialspy
 //
 //=========================================================
-
+#include <Arduino.h>
 #include "menu.h"
 #include "config.h"
 
