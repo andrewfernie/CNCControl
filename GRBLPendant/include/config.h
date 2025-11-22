@@ -30,7 +30,7 @@ const int BufferSize = 200;
 #ifdef TEENSY41
 #ifdef GRBL_COMM_UART
 // Serial to GRBL
-#define grblSerial Serial2
+#define grblSerial Serial4
 constexpr auto GRBLSerialSpeed = 115200;
 #else
 #define GRBL_COMM_USB
@@ -41,7 +41,7 @@ const uint32_t USBFORMAT = USBHOST_SERIAL_8N1;
 #else
 #define GRBL_COMM_UART
 // Serial to GRBL
-#define grblSerial Serial2
+#define grblSerial Serial4
 constexpr auto GRBLSerialSpeed = 115200;
 #endif
 
